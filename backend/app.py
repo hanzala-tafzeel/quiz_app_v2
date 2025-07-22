@@ -4,7 +4,8 @@ from flask_cors import CORS
 from werkzeug.security import generate_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from models import db, User
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import JWTManager 
+
 
 app = None  # Placeholder for the Flask app instance
 
@@ -21,6 +22,7 @@ def create_app():
     # Initialize extensions
     jwt = JWTManager(quiz_app)
     db.init_app(quiz_app)
+    # added jwt for token based authentication
     jwt.init_app(quiz_app)
     
     # Configure CORS
