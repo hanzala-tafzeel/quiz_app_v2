@@ -1,5 +1,7 @@
 <template>
 
+  <!-- page for user dashboard -->
+
   <NavPage/>
 
 
