@@ -1,0 +1,167 @@
+body{
+    background-color: #e8e8e8;
+    height: 90%;
+    font-family: "Sour Gummy", serif;
+}
+
+
+
+
+/* --------------------------- for flash messages --------------------------- */
+.alert {
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+.alert-success {
+    color: #3c763d;
+    background-color: #dff0d8;
+    border-color: #72d023;
+}
+.alert-error {
+    color: #a94442;
+    background-color: #f2dede;
+    border-color: #ebccd1;
+}
+
+.alert-message {
+    color: #a94442;
+    background-color: #f2dede;
+    border-color: #ebccd1;
+}
+
+
+
+/* -------------------------------- for table ------------------------------- */
+.table-col{
+    background-color: #fff;
+
+}
+
+.main-90vh{
+    min-height: 85vh;
+}
+
+
+.navbar-nav .nav-item:hover {
+    background-color: rgba(180, 190, 203, 0.4);
+  }
+  
+/* ------------------------------ css for quizpage  ------------------------------ */
+
+.question-card {
+    margin-bottom: 2rem;
+    border-left: 4px solid #191c1e;
+}
+
+.option-list {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.option-item {
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+.correct-answer {
+    background-color: #d4edda;
+    border-left: 4px solid #28a745;
+}
+
+
+/* -------------------------------- quiz page ------------------------------- */
+
+    /* Fixed Left Section */
+    .fixed-left {
+        position: fixed;
+        height: 100vh;
+        overflow-y: auto;
+        width: 25%; /* Adjust width as needed */
+        background-color: #f8f9fa; /* Light background for the fixed section */
+        padding: 20px;
+    }
+
+    /* Scrollable Right Section */
+    .scrollable-right {
+        margin-left: 25%; /* Should match the width of the fixed-left section */
+        padding: 20px;
+        overflow-y: auto;
+        height: 100vh;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .fixed-left {
+            position: static; /* Make left section scrollable on smaller screens */
+            width: 100%; /* Full width on smaller screens */
+            height: auto; /* Auto height on smaller screens */
+        }
+
+        .scrollable-right {
+            margin-left: 0; /* Remove margin on smaller screens */
+            width: 100%; /* Full width on smaller screens */
+        }
+    }
+
+    /* General Styling */
+    .card {
+        margin-bottom: 20px;
+    }
+
+    .question-card {
+        background-color: #fff;
+        border-radius: 8px;
+    }
+
+    .form-check-input {
+        margin-right: 10px;
+    }
+
+    .btn-dark {
+        background-color: #343a40;
+        border-color: #343a40;
+    }
+
+    .btn-dark:hover {
+        background-color: #23272b;
+        border-color: #23272b;
+    }
+
+  /* ----------------------------- score page css ----------------------------- */
+
+  .question-card {
+    margin-bottom: 2rem;
+    border-left: 4px solid #23262a;
+}
+
+.option-list {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.option-item {
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+.selected-option {
+    background-color: #e98181;
+    border-left: 4px solid #b02d2d;
+}
+.correct-answer {
+    background-color: #d4edda;
+    border-left: 4px solid #28a745;
+}
+
+
+.subject:hover{
+    background-color: #e8e8e8;
+}
+
+
+  
