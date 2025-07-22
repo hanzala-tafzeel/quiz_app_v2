@@ -96,7 +96,7 @@ def register_routes(app):
         db.session.commit()
         return jsonify({"message": "Registration successful", "user_id": new_user.id})
 
-
+# ------------------------------- admin routes ------------------------------- #
     @app.route('/api/user', methods=['GET', 'PUT'])
     @jwt_required()
     def current_user():

@@ -412,6 +412,8 @@ export default {
 </script>
 
 <template>
+
+  <!-- page for admin to manage subjects and chapters -->
   <AdminNavBar />
 
   <div class="container py-4">
