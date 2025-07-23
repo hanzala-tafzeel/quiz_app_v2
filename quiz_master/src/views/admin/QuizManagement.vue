@@ -2,15 +2,16 @@
   <AdminNavBar />
   
   <div class="container py-4">
-    <!-- Flash Messages -->
-    <div v-if="messages.length > 0" class="messages">
-      <div 
-        v-for="(message, index) in messages" 
-        :key="index"
-        :class="`alert alert-${message.category} text-center`"
-      >
-        {{ message.text }}
-        <button type="button" class="btn-close" @click="dismissMessage(index)"></button>
+    <!-- Toast Messages -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+      <div v-if="message" :class="[
+        'toast',
+        'show',
+        messageType === 'success' ? 'bg-success' : 'bg-danger',
+      ]">
+        <div class="toast-body text-white">
+          {{ message }}
+        </div>
       </div>
     </div>
 
@@ -182,7 +183,7 @@
                 />
               </div>
 
-              <div class="mb-3">
+              <!-- <div class="mb-3">
                 <label for="quizDate" class="form-label">Date of Quiz</label>
                 <input
                   type="date"
@@ -191,7 +192,29 @@
                   v-model="formData.date"
                   required
                 />
-              </div>
+              </div> -->
+              <div class="mb-3">
+  <label for="startDateTime" class="form-label">Quiz Start Date & Time</label>
+  <input
+    type="datetime-local"
+    class="form-control"
+    id="startDateTime"
+    v-model="formData.start_datetime"
+  />
+  <div class="form-text">When the quiz becomes available for students</div>
+</div>
+
+<div class="mb-3">
+  <label for="endDateTime" class="form-label">Quiz End Date & Time</label>
+  <input
+    type="datetime-local"
+    class="form-control"
+    id="endDateTime"
+    v-model="formData.end_datetime"
+  />
+  <div class="form-text">When the quiz will no longer be available</div>
+</div>
+
 
               <div class="mb-3">
                 <label for="quizDuration" class="form-label">Duration (minutes)</label>
@@ -254,6 +277,8 @@
                 />
               </div>
 
+
+
               <div class="mb-3">
                 <label for="editQuizDescription" class="form-label">Quiz Description</label>
                 <input
@@ -265,7 +290,7 @@
                 />
               </div>
 
-              <div class="mb-3">
+              <!-- <div class="mb-3">
                 <label for="editQuizDate" class="form-label">Date of Quiz</label>
                 <input
                   type="date"
@@ -274,7 +299,29 @@
                   v-model="editFormData.date"
                   required
                 />
-              </div>
+              </div> -->
+                            <div class="mb-3">
+  <label for="startDateTime" class="form-label">Quiz Start Date & Time</label>
+  <input
+    type="datetime-local"
+    class="form-control"
+    id="startDateTime"
+    v-model="editFormData.start_datetime"
+  />
+  <div class="form-text">When the quiz becomes available for students</div>
+</div>
+
+<div class="mb-3">
+  <label for="endDateTime" class="form-label">Quiz End Date & Time</label>
+  <input
+    type="datetime-local"
+    class="form-control"
+    id="endDateTime"
+    v-model="editFormData.end_datetime"
+  />
+  <div class="form-text">When the quiz will no longer be available</div>
+</div>
+
 
               <div class="mb-3">
                 <label for="editQuizDuration" class="form-label">Duration (minutes)</label>
@@ -566,7 +613,8 @@ export default {
   },
   data() {
     return {
-      messages: [],
+      message: "",
+      messageType: "success", // 'success' or 'error'
       search: "",
       selectedQuiz: null,
       selectedQuestion: null,
@@ -582,7 +630,8 @@ export default {
         chapter_id: "",
         title: "",
         description: "",
-        date: "",
+        start_datetime: "",
+        end_datetime: "",
         duration: "",
       },
       editFormData: {
@@ -590,7 +639,8 @@ export default {
         chapter_id: "",
         title: "",
         description: "",
-        date: "",
+        start_datetime: "",
+        end_datetime: "",
         duration: "",
       },
       questionForm: {
@@ -627,10 +677,11 @@ export default {
       this.messages.splice(index, 1);
     },
     
-    showMessage(text, category = 'success') {
-      this.messages.push({ text, category });
+    showMessage(text, type) {
+      this.message = text;
+      this.messageType = type;
       setTimeout(() => {
-        this.messages.shift();
+        this.message = '';
       }, 5000);
     },
 
@@ -649,7 +700,8 @@ export default {
         chapter_id: "",
         title: "",
         description: "",
-        date: "",
+        start_datetime: "",
+        end_datetime: "",
         duration: "",
       };
       this.editFormData = {
@@ -657,7 +709,8 @@ export default {
         chapter_id: "",
         title: "",
         description: "",
-        date: "",
+        start_datetime: "",
+        end_datetime: "",
         duration: "",
       };
       this.questionForm = {
@@ -683,12 +736,16 @@ export default {
 
     openEditQuizModal(quiz) {
       this.selectedQuiz = quiz;
+      console.log(quiz.start_date),
+      console.log(quiz.end_date),
       this.editFormData = {
         id: quiz.id,
         chapter_id: quiz.chapter_id,
         title: quiz.title,
         description: quiz.description,
-        date: quiz.date,
+        start_datetime: this.convertToDatetimeLocal(quiz.start_date),
+        
+        end_datetime: this.convertToDatetimeLocal(quiz.end_date),
         duration: quiz.duration,
       };
       this.openModal('editQuiz');
@@ -729,6 +786,21 @@ export default {
       this.openModal('deleteQuestion');
     },
 
+    // ADDED: Helper method to convert datetime format
+    convertToDatetimeLocal(datetimeString) {
+      if (!datetimeString) return '';
+      
+      // Convert "2025-07-25 17:00:00" to "2025-07-25T17:00"
+      return datetimeString.replace(' ', 'T').substring(0, 16);
+    },
+
+    // ADDED: Helper method to convert back for API
+    convertFromDatetimeLocal(datetimeLocal) {
+      if (!datetimeLocal) return '';
+      
+      // Convert "2025-07-25T17:00" to "2025-07-25 17:00:00"
+      return datetimeLocal + ':00';
+    },
     // API calls
     async fetchQuizzes() {
       try {
@@ -739,6 +811,7 @@ export default {
           questions: quiz.questions || []
         }));
         this.$store.commit("SET_QUIZZES", quizzes);
+        console.log("Fetched quizzes:", quizzes);
       } catch (err) {
         this.showMessage("Failed to fetch quizzes!", "danger");
       }
@@ -761,6 +834,7 @@ export default {
     async addQuiz() {
       try {
         const token = localStorage.getItem("token");
+        console.log("Form Data:", this.formData);
         const response = await fetch("http://127.0.0.1:5000/api/quizzes", {
           method: "POST",
           headers: {
@@ -787,19 +861,14 @@ export default {
     async updateQuiz() {
       try {
         const token = localStorage.getItem("token");
+        console.log("Edit Form Data:", this.editFormData);
         const response = await fetch(`http://127.0.0.1:5000/api/quizzes/${this.editFormData.id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            chapter_id: this.editFormData.chapter_id,
-            title: this.editFormData.title,
-            description: this.editFormData.description,
-            date: this.editFormData.date,
-            duration: this.editFormData.duration,
-          }),
+          body: JSON.stringify(this.editFormData),
         });
 
         if (!response.ok) {

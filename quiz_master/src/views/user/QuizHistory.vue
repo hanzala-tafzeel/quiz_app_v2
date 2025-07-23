@@ -1,4 +1,6 @@
 <template>
+
+  <NavBar/>
   <div class="container py-4">
     <!-- Page Header -->
     <div class="row mb-4">
@@ -255,7 +257,7 @@
           <ul class="pagination">
             <li class="page-item" :class="{ disabled: currentPage === 1 }">
               <button 
-                class="page-link" 
+                class="page-link text-black" 
                 @click="changePage(currentPage - 1)"
                 :disabled="currentPage === 1"
               >
@@ -269,7 +271,7 @@
               :class="{ active: currentPage === page }"
             >
               <button 
-                class="page-link" 
+                class="page-link text-black" 
                 @click="changePage(page)"
               >
                 {{ page }}
@@ -277,7 +279,7 @@
             </li>
             <li class="page-item" :class="{ disabled: currentPage === totalPages }">
               <button 
-                class="page-link" 
+                class="page-link text-black" 
                 @click="changePage(currentPage + 1)"
                 :disabled="currentPage === totalPages"
               >
@@ -289,11 +291,19 @@
       </div>
     </div>
   </div>
+
+  <FootPage/>
 </template>
 
 <script>
+import NavBar from '@/components/NavBar.vue';
+import FootPage from '@/components/FootPage.vue';
 export default {
   name: 'QuizHistory',
+  components:{
+    NavBar,
+    FootPage,
+  },     
   data() {
     return {
       loading: false,

@@ -119,10 +119,11 @@ export default{
         if (!response.ok) throw new Error(data.message);
 
         // Commit to store
+
         this.$store.commit("SET_LOGIN_DATA", {
           user: data.user,
           token: data.token,
-          userRole: data.role
+          userRole: data.role,
         });
 
         // Save token in localStorage (optional)

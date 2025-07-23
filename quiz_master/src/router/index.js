@@ -8,6 +8,7 @@ import UserSummary from '../views/user/UserSummary.vue'
 import QuizPage from '../views/user/QuizPage.vue'
 import ScorePage from '../views/user/ScorePage.vue'
 import QuizHistory from '../views/user/QuizHistory.vue'
+import BrowseQuiz from '../views/user/BrowseQuiz.vue'
 
 
 // Admin components
@@ -37,6 +38,11 @@ const routes = [
     path: '/user',
     name: 'user',
     component: UserPage
+  },
+  {
+    path: '/user/quizzes',
+    name: 'BrowseContent',
+    component: BrowseQuiz,
   },
   {
     path: '/user/profile',

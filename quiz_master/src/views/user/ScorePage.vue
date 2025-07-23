@@ -1,4 +1,6 @@
 <template>
+
+  <NavPage/>
   <div class="container py-4">
     <!-- Loading State -->
     <div v-if="loading" class="text-center py-5">
@@ -170,11 +172,22 @@
       </div>
     </div>
   </div>
+
+  <FootPage/>
 </template>
 
 <script>
+
+import NavPage from '@/components/NavBar.vue';
+import FootPage from '@/components/FootPage.vue';
+
 export default {
   name: 'quizScore',
+  components:{
+    NavPage,
+    FootPage
+  },   
+
   props: {
     attemptId: {
       type: [String, Number],

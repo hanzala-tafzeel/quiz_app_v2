@@ -1,7 +1,7 @@
 <template>
 
     <NavBar />
-  <div class="container py-5 ">
+  <div class="container py-5 flex-grow-1"> 
     <div class="row justify-content-center align-items-center p-0">
       <div class="col-12 col-md-6 col-lg-5">
         <div class="bg-white shadow-lg rounded-3 p-4 p-md-5">

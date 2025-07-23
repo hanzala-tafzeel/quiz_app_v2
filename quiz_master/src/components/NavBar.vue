@@ -23,7 +23,8 @@ export default {
     </li>
     <li class="nav-item rounded">
 
-        <a class="nav-link " href="{{url_for('quiz_management')}}"><i class="bi bi-clipboard me-2"></i>Quiz</a>
+        <!-- <a class="nav-link " href="{{url_for('quiz_management')}}"><i class="bi bi-clipboard me-2"></i>Quiz</a> -->
+        <router-link to="/user/quizzes" class="nav-link"><i class="bi bi-clipboard me-2"></i>Quiz</router-link>
     </li>
     <li class="nav-item rounded">
         <!-- <a class="nav-link" href="{{url_for('admin_summary')}}"><i class="bi bi-book-half me-2"></i>Summary </a> -->
@@ -36,7 +37,7 @@ export default {
             <li>
                 <!-- <a class="dropdown-item" href="{{url_for('user_management')}}">Account</a> -->
                 <router-link to="/user/profile" class="dropdown-item">Account</router-link>
-                <router-link to="/user/profile/history" class="dropdown-item">History</router-link> >
+                <router-link to="/user/profile/history" class="dropdown-item">History</router-link> 
             </li>
 
             <li>
