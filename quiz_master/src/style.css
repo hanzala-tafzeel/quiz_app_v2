@@ -4,8 +4,20 @@ body{
     font-family: "Sour Gummy", serif;
 }
 
-
-
+/* wrapper */
+.page-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;   /* Full viewport height */
+  }
+  .page-wrapper > .container {
+    flex: 1 0 auto;      /* Grow to fill available space */
+  }
+  .page-wrapper > footer, 
+  .page-wrapper > .footpage {
+    flex-shrink: 0;      /* Prevent footer from shrinking */
+  }
+  
 
 /* --------------------------- for flash messages --------------------------- */
 .alert {

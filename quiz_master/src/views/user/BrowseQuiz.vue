@@ -1,6 +1,6 @@
 <template>
 
-    <NavBar />
+  <NavBar />
   <div class="container py-4">
 
     <!-- Page Header -->
@@ -16,18 +16,12 @@
           </div>
           <div class="d-flex gap-2">
             <!-- View toggle buttons -->
-            <button 
-              @click="viewMode = 'card'" 
-              class="btn"
-              :class="viewMode === 'card' ? 'btn-dark' : 'btn-outline-dark'"
-            >
+            <button @click="viewMode = 'card'" class="btn"
+              :class="viewMode === 'card' ? 'btn-dark' : 'btn-outline-dark'">
               <i class="bi bi-grid"></i>
             </button>
-            <button 
-              @click="viewMode = 'list'" 
-              class="btn"
-              :class="viewMode === 'list' ? 'btn-dark' : 'btn-outline-dark'"
-            >
+            <button @click="viewMode = 'list'" class="btn"
+              :class="viewMode === 'list' ? 'btn-dark' : 'btn-outline-dark'">
               <i class="bi bi-list"></i>
             </button>
           </div>
@@ -45,18 +39,9 @@
               <div class="col-md-4">
                 <label class="form-label text-dark">Search</label>
                 <div class="input-group">
-                  <input 
-                    v-model="searchQuery"
-                    type="text" 
-                    class="form-control border-secondary" 
-                    placeholder="Search subjects, chapters, or quizzes..."
-                  >
-                  <button 
-                    v-if="searchQuery" 
-                    @click="clearSearch"
-                    class="btn btn-outline-secondary"
-                    type="button"
-                  >
+                  <input v-model="searchQuery" type="text" class="form-control border-secondary"
+                    placeholder="Search subjects, chapters, or quizzes...">
+                  <button v-if="searchQuery" @click="clearSearch" class="btn btn-outline-secondary" type="button">
                     <i class="bi bi-x"></i>
                   </button>
                 </div>
@@ -67,11 +52,7 @@
                 <label class="form-label text-dark">Filter by Subject</label>
                 <select v-model="selectedSubject" class="form-select border-secondary">
                   <option value="">All Subjects</option>
-                  <option 
-                    v-for="subject in subjects" 
-                    :key="subject.id" 
-                    :value="subject.id"
-                  >
+                  <option v-for="subject in subjects" :key="subject.id" :value="subject.id">
                     {{ subject.name }}
                   </option>
                 </select>
@@ -82,11 +63,7 @@
                 <label class="form-label text-dark">Filter by Chapter</label>
                 <select v-model="selectedChapter" class="form-select border-secondary" :disabled="!selectedSubject">
                   <option value="">All Chapters</option>
-                  <option 
-                    v-for="chapter in availableChapters" 
-                    :key="chapter.id" 
-                    :value="chapter.id"
-                  >
+                  <option v-for="chapter in availableChapters" :key="chapter.id" :value="chapter.id">
                     {{ chapter.name }}
                   </option>
                 </select>
@@ -110,11 +87,13 @@
                 <small class="text-muted">Active filters:</small>
                 <span v-if="searchQuery" class="badge bg-dark">
                   Search: "{{ searchQuery }}"
-                  <button @click="searchQuery = ''" class="btn-close btn-close-white ms-1" style="font-size: 0.6rem;"></button>
+                  <button @click="searchQuery = ''" class="btn-close btn-close-white ms-1"
+                    style="font-size: 0.6rem;"></button>
                 </span>
                 <span v-if="selectedSubject" class="badge bg-secondary">
                   Subject: {{ getSubjectName(selectedSubject) }}
-                  <button @click="selectedSubject = ''" class="btn-close btn-close-white ms-1" style="font-size: 0.6rem;"></button>
+                  <button @click="selectedSubject = ''" class="btn-close btn-close-white ms-1"
+                    style="font-size: 0.6rem;"></button>
                 </span>
                 <span v-if="selectedChapter" class="badge bg-dark-subtle text-dark">
                   Chapter: {{ getChapterName(selectedChapter) }}
@@ -163,10 +142,7 @@
                     <small class="text-muted">
                       {{ getSubjectChapterCount(subject.id) }} chapters
                     </small>
-                    <button 
-                      @click="selectSubject(subject.id)" 
-                      class="btn btn-sm btn-dark"
-                    >
+                    <button @click="selectSubject(subject.id)" class="btn btn-sm btn-dark">
                       View Chapters
                     </button>
                   </div>
@@ -198,10 +174,7 @@
                     <small class="text-muted">
                       {{ getChapterQuizCount(chapter.id) }} quizzes
                     </small>
-                    <button 
-                      @click="selectChapter(chapter.id)" 
-                      class="btn btn-sm btn-secondary"
-                    >
+                    <button @click="selectChapter(chapter.id)" class="btn btn-sm btn-secondary">
                       View Quizzes
                     </button>
                   </div>
@@ -248,19 +221,13 @@
                 </div>
                 <div class="card-footer bg-transparent">
                   <div class="d-flex gap-2">
-                    <button 
-                      @click="viewQuizDetails(quiz)" 
-                      class="btn btn-sm btn-outline-dark flex-fill"
-                    >
+                    <button @click="viewQuizDetails(quiz)" class="btn btn-sm btn-outline-dark flex-fill">
                       <i class="bi bi-eye me-1"></i>Details
                     </button>
-                    <button 
-                      @click="startQuiz(quiz)" 
-                      class="btn btn-sm btn-dark flex-fill"
-                      :disabled="!quiz.is_active"
-                    >
-                      <i class="bi bi-play me-1"></i>Start
-                    </button>
+                    <router-link :to="`/user/quiz/${quiz.id}`" class="btn btn-sm btn-dark flex-fill"
+                      :disabled="!quiz.is_active">
+                      <i class="bi bi-play me-1"></i>Start Quiz
+                    </router-link>
                   </div>
                 </div>
               </div>
@@ -305,32 +272,20 @@
                   </td>
                   <td class="text-center">
                     <div class="btn-group" role="group">
-                      <button 
-                        v-if="item.type === 'Subject'" 
-                        @click="selectSubject(item.id)" 
-                        class="btn btn-sm btn-outline-dark"
-                      >
+                      <button v-if="item.type === 'Subject'" @click="selectSubject(item.id)"
+                        class="btn btn-sm btn-outline-dark">
                         <i class="bi bi-eye"></i>
                       </button>
-                      <button 
-                        v-if="item.type === 'Chapter'" 
-                        @click="selectChapter(item.id)" 
-                        class="btn btn-sm btn-outline-secondary"
-                      >
+                      <button v-if="item.type === 'Chapter'" @click="selectChapter(item.id)"
+                        class="btn btn-sm btn-outline-secondary">
                         <i class="bi bi-eye"></i>
                       </button>
-                      <button 
-                        v-if="item.type === 'Quiz'" 
-                        @click="viewQuizDetails(item.originalData)" 
-                        class="btn btn-sm btn-outline-dark"
-                      >
+                      <button v-if="item.type === 'Quiz'" @click="viewQuizDetails(item.originalData)"
+                        class="btn btn-sm btn-outline-dark">
                         <i class="bi bi-info-circle"></i>
                       </button>
-                      <button 
-                        v-if="item.type === 'Quiz' && item.originalData.is_active" 
-                        @click="startQuiz(item.originalData)" 
-                        class="btn btn-sm btn-dark"
-                      >
+                      <button v-if="item.type === 'Quiz' && item.originalData.is_active"
+                        @click="startQuiz(item.originalData)" class="btn btn-sm btn-dark">
                         <i class="bi bi-play"></i>
                       </button>
                     </div>
@@ -357,58 +312,68 @@
 
     <!-- Quiz Details Modal -->
     <div v-if="selectedQuiz" class="modal-backdrop" @click="closeQuizModal">
-      <div class="modal-dialog modal-lg" @click.stop>
+      <div class="modal-dialog modal-lg modal-dialog-centered" @click.stop>
         <div class="modal-content bg-white">
-          <div class="modal-header bg-dark text-white">
-            <h5 class="modal-title">{{ selectedQuiz.title }}</h5>
+
+          <!-- Modal Header -->
+          <div class="modal-header d-flex justify-content-between align-items-center bg-dark text-white px-4 py-3">
+            <h5 class="modal-title m-0">{{ selectedQuiz.title }}</h5>
             <button type="button" class="btn-close btn-close-white" @click="closeQuizModal"></button>
           </div>
-          <div class="modal-body">
-            <div class="row">
+
+          <!-- Modal Body -->
+          <div class="modal-body px-4 py-3">
+            <div class="row g-3">
+
+              <!-- Quiz Information -->
               <div class="col-md-6">
-                <h6 class="text-dark">Quiz Information</h6>
-                <ul class="list-unstyled">
+                <h6 class="text-dark mb-2">Quiz Information</h6>
+                <ul class="list-unstyled mb-3">
                   <li><strong>Duration:</strong> {{ selectedQuiz.duration }} minutes</li>
                   <li><strong>Total Marks:</strong> {{ selectedQuiz.total_marks }}</li>
                   <li><strong>Pass Marks:</strong> {{ selectedQuiz.pass_marks }}</li>
-                  <li><strong>Status:</strong> 
+                  <li><strong>Status:</strong>
                     <span class="badge" :class="selectedQuiz.is_active ? 'bg-dark' : 'bg-secondary'">
                       {{ selectedQuiz.is_active ? 'Active' : 'Inactive' }}
                     </span>
                   </li>
                 </ul>
               </div>
+
+              <!-- Chapter & Subject -->
               <div class="col-md-6">
-                <h6 class="text-dark">Chapter & Subject</h6>
-                <ul class="list-unstyled">
+                <h6 class="text-dark mb-2">Chapter & Subject</h6>
+                <ul class="list-unstyled mb-3">
                   <li><strong>Chapter:</strong> {{ getQuizChapterName(selectedQuiz.chapter_id) }}</li>
                   <li><strong>Subject:</strong> {{ getQuizSubjectName(selectedQuiz.chapter_id) }}</li>
                   <li><strong>Schedule Date:</strong> {{ formatDate(selectedQuiz.schedule_date) }}</li>
                   <li><strong>Created:</strong> {{ formatDate(selectedQuiz.created_at) }}</li>
                 </ul>
               </div>
+
             </div>
-            <div class="mt-3">
-              <h6 class="text-dark">Description</h6>
-              <p class="text-muted">{{ selectedQuiz.description || 'No description available' }}</p>
+
+            <!-- Description -->
+            <div class="mt-4">
+              <h6 class="text-dark mb-2">Description</h6>
+              <p class="text-muted mb-0">{{ selectedQuiz.description || 'No description available' }}</p>
             </div>
           </div>
-          <div class="modal-footer">
+
+          <!-- Modal Footer -->
+          <div class="modal-footer d-flex justify-content-between px-4 py-3">
             <button type="button" class="btn btn-secondary" @click="closeQuizModal">
               Close
             </button>
-            <button 
-              type="button" 
-              class="btn btn-dark" 
-              @click="startQuiz(selectedQuiz)"
-              :disabled="!selectedQuiz.is_active"
-            >
-              <i class="bi bi-play me-1"></i>Start Quiz
+            <button type="button" class="btn btn-dark" @click="startQuiz(selectedQuiz)"
+              :disabled="!selectedQuiz.is_active">
+              <i class="bi bi-play me-1"></i> Start Quiz
             </button>
           </div>
         </div>
       </div>
     </div>
+
   </div>
 
   <FootPage />
@@ -427,18 +392,18 @@ export default {
     return {
       loading: false,
       viewMode: 'card', // 'card' or 'list'
-      
+
       // Filter and search states
       searchQuery: '',
       selectedSubject: '',
       selectedChapter: '',
       contentFilter: 'all', // 'all', 'subjects', 'chapters', 'quizzes'
-      
+
       // Data arrays
       subjects: [],
       chapters: [],
       quizzes: [],
-      
+
       // Modal state
       selectedQuiz: null
     }
@@ -453,57 +418,57 @@ export default {
     // Filtered subjects based on search and filters
     filteredSubjects() {
       let filtered = this.subjects;
-      
+
       if (this.searchQuery) {
         const query = this.searchQuery.toLowerCase();
-        filtered = filtered.filter(subject => 
-          subject.name.toLowerCase().includes(query) || 
+        filtered = filtered.filter(subject =>
+          subject.name.toLowerCase().includes(query) ||
           (subject.description && subject.description.toLowerCase().includes(query))
         );
       }
-      
+
       if (this.selectedSubject) {
         filtered = filtered.filter(subject => subject.id == this.selectedSubject);
       }
-      
+
       return filtered;
     },
 
     // Filtered chapters based on search and filters
     filteredChapters() {
       let filtered = this.chapters;
-      
+
       if (this.searchQuery) {
         const query = this.searchQuery.toLowerCase();
-        filtered = filtered.filter(chapter => 
-          chapter.name.toLowerCase().includes(query) || 
+        filtered = filtered.filter(chapter =>
+          chapter.name.toLowerCase().includes(query) ||
           (chapter.description && chapter.description.toLowerCase().includes(query))
         );
       }
-      
+
       if (this.selectedSubject) {
         filtered = filtered.filter(chapter => chapter.subject_id == this.selectedSubject);
       }
-      
+
       if (this.selectedChapter) {
         filtered = filtered.filter(chapter => chapter.id == this.selectedChapter);
       }
-      
+
       return filtered;
     },
 
     // Filtered quizzes based on search and filters
     filteredQuizzes() {
       let filtered = this.quizzes;
-      
+
       if (this.searchQuery) {
         const query = this.searchQuery.toLowerCase();
-        filtered = filtered.filter(quiz => 
-          quiz.title.toLowerCase().includes(query) || 
+        filtered = filtered.filter(quiz =>
+          quiz.title.toLowerCase().includes(query) ||
           (quiz.description && quiz.description.toLowerCase().includes(query))
         );
       }
-      
+
       if (this.selectedChapter) {
         filtered = filtered.filter(quiz => quiz.chapter_id == this.selectedChapter);
       } else if (this.selectedSubject) {
@@ -512,14 +477,14 @@ export default {
           .map(chapter => chapter.id);
         filtered = filtered.filter(quiz => subjectChapterIds.includes(quiz.chapter_id));
       }
-      
+
       return filtered;
     },
 
     // Combined content for list view
     combinedFilteredContent() {
       let content = [];
-      
+
       if (this.contentFilter === 'all' || this.contentFilter === 'subjects') {
         content = content.concat(
           this.filteredSubjects.map(subject => ({
@@ -534,7 +499,7 @@ export default {
           }))
         );
       }
-      
+
       if (this.contentFilter === 'all' || this.contentFilter === 'chapters') {
         content = content.concat(
           this.filteredChapters.map(chapter => ({
@@ -549,7 +514,7 @@ export default {
           }))
         );
       }
-      
+
       if (this.contentFilter === 'all' || this.contentFilter === 'quizzes') {
         content = content.concat(
           this.filteredQuizzes.map(quiz => ({
@@ -564,7 +529,7 @@ export default {
           }))
         );
       }
-      
+
       return content;
     },
 
@@ -695,7 +660,8 @@ export default {
 
     startQuiz(quiz) {
       if (quiz.is_active) {
-        this.$router.push(`/quiz/${quiz.id}`);
+
+        this.$router.push(`user/quiz/${quiz.id}`);
       }
     },
 

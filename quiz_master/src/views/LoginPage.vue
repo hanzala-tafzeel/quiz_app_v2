@@ -127,8 +127,12 @@ export default{
         });
 
         // Save token in localStorage (optional)
-        localStorage.setItem('token', data.token);
+        window.sessionStorage.setItem('token', data.token);
+        window.sessionStorage.setItem('user', JSON.stringify(data.user));
+        window.sessionStorage.setItem('userRole', data.role);
+        window.sessionStorage.setItem('isAuthenticated', true);
 
+        console.log("window.sessionStorage", window.sessionStorage.getItem('user'));
         // Redirect based on role
         if (data.role === "admin") {
           this.$router.push("/admin");

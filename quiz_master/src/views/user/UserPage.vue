@@ -7,7 +7,7 @@
     <div class="row container">
 
       <div class="col-md-6">
-        <h1 class="text-dark">Welcome, {{ currentUser }}</h1>
+        <h1 class="text-dark">Welcome, {{ capitalize(user.username) }}</h1>
       </div>
       <div class="col-md-6">
         <form @submit.prevent="searchQuiz" class="float-end">
@@ -298,7 +298,6 @@ export default {
 
   data() {
     return {
-      currentUser: "Hanzala",
       search: "",
       quizzes: [],
       selectedQuiz: null,
@@ -307,6 +306,13 @@ export default {
   },
 
   computed: {
+
+    isAuthenticated() {
+      return window.sessionStorage.getItem('isAuthenticated') === 'true';
+    },
+    user(){
+      return JSON.parse(window.sessionStorage.getItem('user'));
+    },
     // Available quizzes (currently open for attempts)
     availableQuizzes() {
       const now = new Date();
@@ -368,6 +374,11 @@ export default {
       if (!dateTimeString) return null;
       // Convert "2025-07-25 14:30:00" to "2025-07-25T14:30:00"
       return new Date(dateTimeString.replace(' ', 'T'));
+    },
+
+    capitalize(str) {
+      if (!str || typeof str !== "string") return "";
+      return str.toString().charAt(0).toUpperCase() + str.slice(1);
     },
 
     // Search helper method

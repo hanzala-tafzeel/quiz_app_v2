@@ -1,191 +1,245 @@
 <template>
   <div>
-    <!-- Pop up to start quiz -->
-    <div 
-      v-if="showStartModal" 
-      class="modal-backdrop" 
-      @click.stop
-    >
-      <div class="modal-dialog modal-dialog-centered" @click.stop>
+    <!-- Start Quiz Modal -->
+    <div v-if="showStartModal" class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Start Quiz</h5>
+          <div class="modal-header bg-dark text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-play-circle me-2"></i>Start Quiz
+            </h5>
           </div>
           <div class="modal-body">
-            <p>The quiz will be for {{ Math.floor(quizData.duration / 60) }} minutes. Once started, the timer cannot be paused.</p>
-            <ul class="list-group">
-              <li class="list-group-item">Total Questions: {{ quizData.questions ? quizData.questions.length : 0 }}</li>
-              <li class="list-group-item">Duration: {{ Math.floor(quizData.duration / 60) }} minutes</li>
-            </ul>
+            <div class="alert alert-info mb-3">
+              <i class="bi bi-info-circle me-2"></i>
+              The quiz will be for {{ Math.floor(quizData.duration / 60) }} minutes. Once started, the timer cannot be paused.
+            </div>
+            <div class="row g-3">
+              <div class="col-6">
+                <div class="card text-center h-100">
+                  <div class="card-body">
+                    <h3 class="text-dark mb-1">{{ quizData.questions ? quizData.questions.length : 0 }}</h3>
+                    <small class="text-muted">Questions</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="card text-center h-100">
+                  <div class="card-body">
+                    <h3 class="text-dark mb-1">{{ Math.floor(quizData.duration / 60) }}</h3>
+                    <small class="text-muted">Minutes</small>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-dark" @click="startQuiz">Start Quiz</button>
+            <button type="button" class="btn btn-dark btn-lg w-100" @click="startQuiz">
+              <i class="bi bi-play-fill me-2"></i>Start Quiz
+            </button>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="container-fluid py-4">
-      <div class="row">
-        <!-- Left Fixed Section -->
-        <div class="col-md-3 fixed-left">
-          <div class="card shadow">
-            <div class="card-body">
-              <h4 class="card-title text-dark mb-4">Quiz Summary</h4>
-              <ul class="list-group list-group-flush">
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                  <span>Quiz ID:</span>
-                  <span class="badge bg-dark">{{ quizData.id }}</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                  <span>Total Marks:</span>
-                  <span class="badge bg-dark">{{ quizData.total_marks }}</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                  <span>Total Questions:</span>
-                  <span class="badge bg-dark">{{ quizData.questions ? quizData.questions.length : 0 }}</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                  <span>Duration:</span>
-                  <span class="badge bg-dark">{{ Math.floor(quizData.duration / 60) }} minutes</span>
-                </li>
-              </ul>
+    <!-- Main Quiz Container -->
+    <div class="container-fluid py-3">
+      <div class="row g-3">
+        <!-- Sidebar - Collapsible on Mobile -->
+        <div class="col-lg-3">
+          <div class="position-sticky" style="top: 1rem;">
+            <!-- Mobile Toggle Button -->
+            <button class="btn btn-outline-dark d-lg-none w-100 mb-3" type="button" 
+                    data-bs-toggle="collapse" data-bs-target="#quizSidebar">
+              <i class="bi bi-list me-2"></i>Quiz Info & Navigation
+            </button>
 
-              <!-- Enhanced Timer Display -->
-              <div class="mt-4">
-                <div class="card" :class="timeRemaining <= 300 ? 'border-danger' : 'border-success'">
-                  <div class="card-body text-center p-3">
-                    <h5 class="card-title mb-2">
-                      <i class="bi bi-clock me-2"></i>Time Remaining
-                    </h5>
-                    <h3 class="mb-0" :class="timeRemaining <= 300 ? 'text-danger' : 'text-success'">
-                      {{ formatTimeRemaining(timeRemaining) }}
-                    </h3>
-                    <div class="progress mt-3" style="height: 8px;">
-                      <div 
-                        class="progress-bar" 
-                        :class="timeRemaining <= 300 ? 'bg-danger' : 'bg-success'"
-                        role="progressbar" 
-                        :style="`width: ${(timeRemaining / quizData.duration) * 100}%`"
-                      ></div>
+            <!-- Collapsible Sidebar Content -->
+            <div class="collapse d-lg-block" id="quizSidebar">
+              <!-- Quiz Summary -->
+              <div class="card mb-3">
+                <div class="card-header bg-dark text-white">
+                  <h6 class="mb-0">
+                    <i class="bi bi-clipboard-data me-2"></i>Quiz Summary
+                  </h6>
+                </div>
+                <div class="card-body">
+                  <div class="row g-2 text-center">
+                    <div class="col-6">
+                      <div class="bg-light rounded p-2">
+                        <div class="fw-bold text-dark">{{ quizData.id }}</div>
+                        <small class="text-muted">Quiz ID</small>
+                      </div>
+                    </div>
+                    <div class="col-6">
+                      <div class="bg-light rounded p-2">
+                        <div class="fw-bold text-dark">{{ quizData.total_marks }}</div>
+                        <small class="text-muted">Total Marks</small>
+                      </div>
+                    </div>
+                    <div class="col-6">
+                      <div class="bg-light rounded p-2">
+                        <div class="fw-bold text-dark">{{ quizData.questions ? quizData.questions.length : 0 }}</div>
+                        <small class="text-muted">Questions</small>
+                      </div>
+                    </div>
+                    <div class="col-6">
+                      <div class="bg-light rounded p-2">
+                        <div class="fw-bold text-dark">{{ Math.floor(quizData.duration / 60) }}</div>
+                        <small class="text-muted">Minutes</small>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
+              <!-- Timer -->
+              <div class="card mb-3">
+                <div class="card-body text-center">
+                  <div class="mb-2">
+                    <i class="bi bi-clock" :class="timeRemaining <= 300 ? 'text-danger' : 'text-success'"></i>
+                    <small class="text-muted ms-1">Time Remaining</small>
+                  </div>
+                  <h4 class="mb-2" :class="timeRemaining <= 300 ? 'text-danger' : 'text-success'">
+                    {{ formatTimeRemaining(timeRemaining) }}
+                  </h4>
+                  <div class="progress" style="height: 6px;">
+                    <div class="progress-bar" 
+                         :class="timeRemaining <= 300 ? 'bg-danger' : 'bg-success'"
+                         :style="`width: ${(timeRemaining / quizData.duration) * 100}%`"></div>
+                  </div>
+                </div>
+              </div>
+
               <!-- Question Navigation -->
-              <div class="mt-4">
-                <h5 class="card-title text-dark mb-3">Question Navigation</h5>
-                <div class="d-flex flex-wrap gap-2">
-                  <button 
-                    v-for="(question, index) in quizData.questions" 
-                    :key="question.id"
-                    class="btn btn-sm"
-                    :class="currentQuestionIndex === index ? 'btn-dark' : (answers[question.id] !== null ? 'btn-success' : 'btn-outline-dark')"
-                    @click="goToQuestion(index)"
-                  >
-                    {{ index + 1 }}
+              <div class="card">
+                <div class="card-header">
+                  <h6 class="mb-0">
+                    <i class="bi bi-grid-3x3-gap me-2"></i>Questions
+                  </h6>
+                </div>
+                <div class="card-body">
+                  <div class="d-grid gap-2" style="grid-template-columns: repeat(auto-fit, minmax(40px, 1fr)); display: grid;">
+                    <button v-for="(question, index) in quizData.questions" 
+                            :key="question.id" 
+                            class="btn btn-sm"
+                            :class="getQuestionButtonClass(index, question.id)"
+                            @click="goToQuestion(index)">
+                      {{ index + 1 }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-9">
+          <!-- Quiz Title -->
+          <div class="card mb-3">
+            <div class="card-header bg-dark text-white">
+              <h4 class="mb-0">{{ quizData.title }}</h4>
+            </div>
+          </div>
+
+          <!-- Current Question -->
+          <div v-if="quizData.questions.length > 0" class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+              <div class="mb-2 mb-sm-0">
+                <h5 class="mb-0">Question {{ currentQuestionIndex + 1 }}</h5>
+                <small class="text-muted">of {{ quizData.questions.length }} questions</small>
+              </div>
+              <span class="badge bg-secondary fs-6">{{ currentQuestion.marks }} marks</span>
+            </div>
+            
+            <div class="card-body">
+              <!-- Question Text -->
+              <div class="mb-4">
+                <h5 class="lh-base">{{ currentQuestion.text }}</h5>
+              </div>
+
+              <!-- Answer Options -->
+              <div class="d-grid gap-3">
+                <div v-for="(option, optionIndex) in currentQuestion.options" 
+                     :key="optionIndex"
+                     class="card border"
+                     :class="getOptionClass(optionIndex)"
+                     style="cursor: pointer;"
+                     @click="selectOption(optionIndex)">
+                  <div class="card-body py-3">
+                    <div class="d-flex align-items-start">
+                      <div class="form-check me-3">
+                        <input class="form-check-input" 
+                               type="radio" 
+                               :name="`question_${currentQuestion.id}`"
+                               :id="`option${optionIndex}_${currentQuestion.id}`" 
+                               :value="optionIndex" 
+                               :disabled="!quizStarted"
+                               v-model="answers[currentQuestion.id]">
+                      </div>
+                      <label class="form-check-label flex-grow-1 lh-base user-select-none" 
+                             :for="`option${optionIndex}_${currentQuestion.id}`">
+                        {{ option }}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Navigation Controls -->
+          <div class="card">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-md-4 mb-2 mb-md-0">
+                  <button type="button" 
+                          class="btn btn-outline-secondary w-100 w-md-auto" 
+                          @click="previousQuestion"
+                          :disabled="currentQuestionIndex === 0 || !quizStarted">
+                    <i class="bi bi-arrow-left me-2"></i>Previous
+                  </button>
+                </div>
+                
+                <div class="col-md-4 text-center mb-2 mb-md-0">
+                  <div class="progress mb-2" style="height: 4px;">
+                    <div class="progress-bar bg-dark" 
+                         :style="`width: ${((currentQuestionIndex + 1) / quizData.questions.length) * 100}%`"></div>
+                  </div>
+                  <small class="text-muted">
+                    {{ currentQuestionIndex + 1 }} of {{ quizData.questions.length }}
+                  </small>
+                </div>
+
+                <div class="col-md-4 text-end">
+                  <button v-if="currentQuestionIndex < quizData.questions.length - 1" 
+                          type="button"
+                          class="btn btn-outline-secondary w-100 w-md-auto" 
+                          @click="nextQuestion" 
+                          :disabled="!quizStarted">
+                    Next<i class="bi bi-arrow-right ms-2"></i>
+                  </button>
+
+                  <button v-else 
+                          type="button"
+                          class="btn btn-success w-100 w-md-auto" 
+                          @click="submitQuiz" 
+                          :disabled="!quizStarted">
+                    <i class="bi bi-check-circle me-2"></i>Submit Quiz
                   </button>
                 </div>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- Right Scrollable Section -->
-        <div class="col-md-9">
-          <!-- Quiz Header -->
-          <div class="card mb-4 shadow">
-            <div class="card-header bg-dark text-white">
-              <h3 class="mb-0">{{ quizData.title }}</h3>
-            </div>
-          </div>
-
-          <!-- Single Question Display -->
-          <div v-if="quizData.questions.length > 0" class="card shadow mb-4">
-            <div class="card-header bg-light">
-              <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Question {{ currentQuestionIndex + 1 }} of {{ quizData.questions.length }}</h5>
-                <span class="badge bg-secondary">Marks: {{ currentQuestion.marks }}</span>
-              </div>
-            </div>
-            <div class="card-body">
-              <h4 class="mb-4">{{ currentQuestion.text }}</h4>
-              
-              <!-- Options -->
-              <div class="d-flex flex-column gap-3">
-                <div 
-                  v-for="(option, optionIndex) in currentQuestion.options" 
-                  :key="optionIndex"
-                  class="form-check p-3 border rounded"
-                  :class="answers[currentQuestion.id] === optionIndex ? 'border-primary bg-light' : 'border-secondary'"
-                >
-                  <input 
-                    class="form-check-input" 
-                    type="radio" 
-                    :name="`question_${currentQuestion.id}`"
-                    :id="`option${optionIndex}_${currentQuestion.id}`" 
-                    :value="optionIndex"
-                    :disabled="!quizStarted"
-                    v-model="answers[currentQuestion.id]"
-                  >
-                  <label 
-                    class="form-check-label ms-2 fw-normal" 
-                    :for="`option${optionIndex}_${currentQuestion.id}`"
-                  >
-                    {{ option }}
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Navigation Buttons -->
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <button 
-              type="button" 
-              class="btn btn-outline-secondary"
-              @click="previousQuestion"
-              :disabled="currentQuestionIndex === 0 || !quizStarted"
-            >
-              <i class="bi bi-arrow-left me-2"></i>Previous
-            </button>
-
-            <div class="text-center">
-              <span class="text-muted">
-                Question {{ currentQuestionIndex + 1 }} of {{ quizData.questions.length }}
-              </span>
-            </div>
-
-            <div>
-              <button 
-                v-if="currentQuestionIndex < quizData.questions.length - 1"
-                type="button" 
-                class="btn btn-outline-secondary"
-                @click="nextQuestion"
-                :disabled="!quizStarted"
-              >
-                Next<i class="bi bi-arrow-right ms-2"></i>
-              </button>
-              
-              <button 
-                v-if="currentQuestionIndex === quizData.questions.length - 1"
-                type="button" 
-                class="btn btn-success"
-                @click="submitQuiz"
-                :disabled="!quizStarted"
-              >
-                <i class="bi bi-check-circle me-2"></i>Submit Quiz
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
-    <!-- Loading Overlay -->
-    <div v-if="loading" class="loading-overlay">
-      <div class="spinner-border text-primary" role="status">
+    <!-- Loading Spinner -->
+    <div v-if="loading" class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" 
+         style="background-color: rgba(0,0,0,0.5); z-index: 2000;">
+      <div class="spinner-border text-dark" style="width: 3rem; height: 3rem;">
         <span class="visually-hidden">Loading...</span>
       </div>
     </div>
@@ -194,7 +248,7 @@
 
 <script>
 export default {
-  name: 'quizPage',
+  name: 'QuizPage',
   props: {
     quizId: {
       type: [String, Number],
@@ -228,7 +282,7 @@ export default {
     async fetchQuizData() {
       try {
         this.loading = true;
-        const token = localStorage.getItem("token");
+        const token = window.sessionStorage.getItem('token');
         const response = await fetch(`http://127.0.0.1:5000/api/quizzes/${this.quizId}/attempt`, {
           method: 'GET',
           headers: {
@@ -241,13 +295,12 @@ export default {
           const data = await response.json();
           this.quizData = data;
           this.timeRemaining = this.quizData.duration;
-          
+
           const answersObj = {};
           this.quizData.questions.forEach(question => {
             answersObj[question.id] = null;
           });
           this.answers = answersObj;
-          
         } else {
           console.error('Failed to fetch quiz data');
           this.$router.push('/');
@@ -269,7 +322,6 @@ export default {
     startTimer() {
       this.timer = setInterval(() => {
         this.timeRemaining--;
-
         if (this.timeRemaining <= 0) {
           clearInterval(this.timer);
           alert("Time is up!");
@@ -284,7 +336,6 @@ export default {
       return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
     },
 
-    // Navigation methods
     nextQuestion() {
       if (this.currentQuestionIndex < this.quizData.questions.length - 1) {
         this.currentQuestionIndex++;
@@ -301,6 +352,28 @@ export default {
       this.currentQuestionIndex = index;
     },
 
+    selectOption(optionIndex) {
+      if (this.quizStarted) {
+        this.answers[this.currentQuestion.id] = optionIndex;
+      }
+    },
+
+    getQuestionButtonClass(index, questionId) {
+      if (this.currentQuestionIndex === index) {
+        return 'btn-dark';
+      } else if (this.answers[questionId] !== null) {
+        return 'btn-success';
+      } else {
+        return 'btn-outline-secondary';
+      }
+    },
+
+    getOptionClass(optionIndex) {
+      return this.answers[this.currentQuestion.id] === optionIndex 
+        ? 'border-dark bg-dark bg-opacity-10' 
+        : 'border-secondary';
+    },
+
     async submitQuiz() {
       if (this.timer) {
         clearInterval(this.timer);
@@ -308,7 +381,7 @@ export default {
 
       try {
         this.loading = true;
-        
+
         const responses = Object.entries(this.answers)
           .filter(([questionId, selectedOption]) => selectedOption !== null)
           .map(([questionId, selectedOption]) => ({
@@ -316,7 +389,7 @@ export default {
             selected_option: parseInt(selectedOption)
           }));
 
-        const token = localStorage.getItem("token");
+        const token = window.sessionStorage.getItem('token');
         const response = await fetch(`http://127.0.0.1:5000/api/quizzes/${this.quizId}/attempt`, {
           method: 'POST',
           headers: {
@@ -357,55 +430,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-.fixed-left {
-  position: sticky;
-  top: 20px;
-  height: calc(100vh - 40px);
-  overflow-y: auto;
-}
-
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1050;
-}
-
-.modal-dialog {
-  background: white;
-  border-radius: 0.375rem;
-  max-width: 500px;
-  width: 90%;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 2000;
-}
-
-.gap-2 {
-  gap: 0.5rem;
-}
-
-.gap-3 {
-  gap: 1rem;
-}
-</style>

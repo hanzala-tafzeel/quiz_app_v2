@@ -181,12 +181,13 @@
                       >
                         <i class="bi bi-eye"></i>
                       </button>
-                      <button 
-                        @click="retakeQuiz(attempt.quiz_id)"
-                        class="btn btn-sm btn-outline-secondary"
+                      <router-link 
+                        :to="`/user/quiz/${attempt.quiz_id}`"
+                        class="btn btn-sm btn-outline-info ms-2"
+                        v-if="attempt.is_completed"
                       >
-                        <i class="bi bi-arrow-clockwise"></i>
-                      </button>
+                      <i class="bi bi-arrow-clockwise"></i>
+                      </router-link>
                     </td>
                   </tr>
                 </tbody>
@@ -356,7 +357,7 @@ export default {
       try {
         this.loading = true;
         
-        const token = localStorage.getItem("token");
+        const token = window.sessionStorage.getItem('token');
         const response = await fetch('http://127.0.0.1:5000/api/attempts', {
           method: 'GET',
           headers: {

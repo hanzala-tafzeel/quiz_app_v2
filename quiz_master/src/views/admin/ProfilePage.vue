@@ -1,5 +1,5 @@
 <template>
-
+ <div class="page-wrapper d-flex flex-column min-vh-100">
     <AdminNavBar/>
   <div class="container py-4">
     <!-- Header -->
@@ -231,6 +231,8 @@
   </div>
 
   <FootPage/>
+
+</div>
 </template>
 
 <script>
@@ -304,7 +306,7 @@ export default {
       this.error = null;
       
       try {
-        const token = localStorage.getItem('token');
+        const token = window.sessionStorage.getItem('token');
         const response = await fetch('http://127.0.0.1:5000/api/users', {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -340,7 +342,7 @@ export default {
       this.updatingUserId = this.editForm.id;
       
       try {
-        const token = localStorage.getItem('token');
+        const token = window.sessionStorage.getItem('token');
         const response = await fetch(`http://127.0.0.1:5000/api/users/${this.editForm.id}`, {
           method: 'PUT',
           headers: {
@@ -385,7 +387,7 @@ export default {
       this.deletingUserId = this.userToDelete.id;
       
       try {
-        const token = localStorage.getItem('token');
+        const token = window.sessionStorage.getItem('token');
         const response = await fetch(`http://127.0.0.1:5000/api/users/${this.userToDelete.id}`, {
           method: 'DELETE',
           headers: {

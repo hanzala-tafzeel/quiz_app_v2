@@ -20,7 +20,7 @@
           </div>
 
           <!-- Profile Content -->
-          <div v-if="!loading && !error && currentUser">
+          <div v-if="!loading && !error && user">
             <!-- Profile Header -->
             <div class="text-center mb-4">
               <div class="bg-dark text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
@@ -36,7 +36,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                   <div>
                     <small class="text-muted d-block">Username</small>
-                    <strong>{{ currentUser.username }}</strong>
+                    <strong>{{ user.username }}</strong>
                   </div>
                   <button @click="openEditModal" class="btn btn-outline-dark btn-sm">
                     <i class="bi bi-pencil-square"></i> Edit
@@ -49,7 +49,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                   <div>
                     <small class="text-muted d-block">Email Address</small>
-                    <strong>{{ currentUser.email }}</strong>
+                    <strong>{{ user.email }}</strong>
                   </div>
                   <span class="badge bg-secondary">Read Only</span>
                 </div>
@@ -60,7 +60,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                   <div>
                     <small class="text-muted d-block">Phone Number</small>
-                    <strong>{{ currentUser.phone || 'Not provided' }}</strong>
+                    <strong>{{ user.phone || 'Not provided' }}</strong>
                   </div>
                   <button @click="openEditModal" class="btn btn-outline-dark btn-sm">
                     <i class="bi bi-pencil-square"></i> Edit
@@ -151,7 +151,7 @@ export default {
   },
   data() {
     return {
-      currentUser: null,
+      user: null,
       loading: false,
       error: null,
       showEditModal: false,
@@ -173,7 +173,7 @@ export default {
       this.error = null;
       
       try {
-        const token = localStorage.getItem('token');
+        const token = window.sessionStorage.getItem('token');
         if (!token) {
           throw new Error('No authentication token found');
         }
@@ -194,7 +194,7 @@ export default {
         }
         
         const userData = await response.json();
-        this.currentUser = userData;
+        this.user = userData;
       } catch (err) {
         this.error = err.message || 'Failed to fetch user profile. Please try again.';
         console.error('Error fetching user profile:', err);
@@ -205,8 +205,8 @@ export default {
 
     openEditModal() {
       this.editForm = {
-        username: this.currentUser.username,
-        phone: this.currentUser.phone || ''
+        username: this.user.username,
+        phone: this.user.phone || ''
       };
       this.showEditModal = true;
     },
@@ -223,7 +223,7 @@ export default {
       this.updating = true;
       
       try {
-        const token = localStorage.getItem('token');
+        const token = window.sessionStorage.getItem('token');
         if (!token) {
           throw new Error('No authentication token found');
         }
@@ -250,7 +250,7 @@ export default {
         const data = await response.json();
         
         // Update current user data
-        this.currentUser = data.user;
+        this.user = data.user;
         
         this.showMessage(data.message || 'Profile updated successfully!', 'success');
         this.closeEditModal();

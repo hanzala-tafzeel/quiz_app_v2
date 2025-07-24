@@ -1,313 +1,306 @@
 <template>
   <!-- page for admin to manage subjects and chapters -->
-  <AdminNavBar />
 
-  <div class="container py-4">
-    <!-- Flash Messages -->
-    <!-- <div v-if="messages.length > 0" class="messages">
-      <div
-        v-for="(message, index) in messages"
-        :key="index"
-        :class="`alert alert-${message.category} text-center`"
-      >
-        {{ message.text }}
-        <button
-          type="button"
-          class="btn-close"
-          @click="dismissMessage(index)"
-        ></button>
-      </div>
-    </div> -->
-    <div class="toast-container position-fixed top-0 end-0 p-3">
-      <div v-if="message" :class="[
-        'toast',
-        'show',
-        messageType === 'success' ? 'bg-success' : 'bg-danger',
-      ]">
-        <div class="toast-body text-white">
-          {{ message }}
-        </div>
-      </div>
-    </div>
+  <div class="page-wrapper d-flex flex-column min-vh-100">
+    <AdminNavBar />
 
-    <div class="row">
-      <div class="col-md-12 mb-4">
-        <div class="d-flex justify-content-between align-items-center">
-          <h1 class="text-center flex-grow-1">
-            Subject and Chapter Management
-          </h1>
-        </div>
-      </div>
+    <div class="container py-4">
 
-      <div class="col-md-6">
-        <h3 v-if="isAuthenticated && currentUser" class="text-secondary">
-          Welcome, {{ capitalize(currentUser.username) }}!
-        </h3>
-        <div v-else>
-          <p>You are not logged in.</p>
-          <a href="/login">Login</a>
-        </div>
-      </div>
-
-      <div class="col-md-6">
-        <form @submit.prevent="searchSubjects" class="float-end">
-          <div class="input-group mb-3">
-            <input type="text" class="form-control" v-model="searchQuery" placeholder="Search Subject" />
-            <button class="btn btn-dark" type="submit">Search</button>
+      <!-- toast to display msg -->
+      <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div v-if="message" :class="[
+          'toast',
+          'show',
+          messageType === 'success' ? 'bg-success' : 'bg-danger',
+        ]">
+          <div class="toast-body text-white">
+            {{ message }}
           </div>
-        </form>
+        </div>
       </div>
 
-      <!-- Subjects Container -->
-      <div class="col-12">
-        <div class="row g-4">
-          <div v-if="filteredSubjects.length === 0" class="col-12 text-center text-danger">
-            <h3>No Subjects Found</h3>
+      <div class="row">
+        <div class="col-md-12 mb-4">
+          <div class="d-flex justify-content-between align-items-center">
+            <h1 class="text-center flex-grow-1">
+              Subject and Chapter Management
+            </h1>
           </div>
+        </div>
 
-          <div v-for="subject in filteredSubjects" :key="subject.id" class="col-md-6 col-lg-4">
-            <div class="card card-subject shadow-sm">
-              <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                <h4 class="m-0">{{ subject.name }}</h4>
-                <div class="action-icons">
-                  <a href="#" class="text-white me-2" @click.prevent="openEditSubjectModal(subject)">
-                    <i class="bi bi-pencil"></i>
-                  </a>
-                  <a href="#" class="text-white" @click.prevent="openDeleteSubjectModal(subject)">
-                    <i class="bi bi-trash3"></i>
-                  </a>
+
+
+        <div class="col-md-6">
+          <h3 v-if="isAuthenticated " class="text-secondary">
+            Welcome, {{ capitalize(user.username) }}!
+          </h3>
+          <div v-else>
+            <p>You are not logged in.</p>
+            <a href="/login">Login</a>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <form @submit.prevent="searchSubjects" class="float-end">
+            <div class="input-group mb-3">
+              <input type="text" class="form-control" v-model="searchQuery" placeholder="Search Subject" />
+              <button class="btn btn-dark" type="submit">Search</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Subjects Container -->
+        <div class="col-12">
+          <div class="row g-4">
+            <div v-if="filteredSubjects.length === 0" class="col-12 text-center text-danger">
+              <h3>No Subjects Found</h3>
+            </div>
+
+            <div v-for="subject in filteredSubjects" :key="subject.id" class="col-md-6 col-lg-4">
+              <div class="card card-subject shadow-sm">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                  <h4 class="m-0">{{ subject.name }}</h4>
+                  <div class="action-icons">
+                    <a href="#" class="text-white me-2" @click.prevent="openEditSubjectModal(subject)">
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="#" class="text-white" @click.prevent="openDeleteSubjectModal(subject)">
+                      <i class="bi bi-trash3"></i>
+                    </a>
+                  </div>
+                </div>
+                <div class="card-body p-0">
+                  <table class="table table-hover mb-0">
+                    <thead>
+                      <tr>
+                        <th>Chapter Name</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="chapter in subject.chapters" :key="chapter.id">
+                        <td>{{ chapter.name }}</td>
+                        <td>
+                          <a href="#" class="me-2" @click.prevent="
+                            openEditChapterModal(chapter, subject)
+                            ">
+                            <i class="bi bi-pencil text-dark"></i>
+                          </a>
+                          <a href="#" @click.prevent="
+                            openDeleteChapterModal(chapter, subject)
+                            ">
+                            <i class="bi bi-trash3 text-dark"></i>
+                          </a>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="card-footer bg-white text-center">
+                  <button class="btn btn-sm btn-dark" @click="openAddChapterModal(subject)">
+                    <i class="bi bi-plus-circle me-2"></i>Add Chapter
+                  </button>
                 </div>
               </div>
-              <div class="card-body p-0">
-                <table class="table table-hover mb-0">
-                  <thead>
-                    <tr>
-                      <th>Chapter Name</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="chapter in subject.chapters" :key="chapter.id">
-                      <td>{{ chapter.name }}</td>
-                      <td>
-                        <a href="#" class="me-2" @click.prevent="
-                          openEditChapterModal(chapter, subject)
-                          ">
-                          <i class="bi bi-pencil text-dark"></i>
-                        </a>
-                        <a href="#" @click.prevent="
-                          openDeleteChapterModal(chapter, subject)
-                          ">
-                          <i class="bi bi-trash3 text-dark"></i>
-                        </a>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <div class="card-footer bg-white text-center">
-                <button class="btn btn-sm btn-dark" @click="openAddChapterModal(subject)">
-                  <i class="bi bi-plus-circle me-2"></i>Add Chapter
-                </button>
-              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 text-center mt-4">
+          <button class="btn btn-dark" @click="openAddSubjectModal">
+            <i class="bi bi-plus-circle me-2"></i>Add New Subject
+          </button>
+        </div>
+      </div>
+
+      <!-- Add Subject Modal -->
+      <div v-if="modals.addSubject" class="modal-backdrop" @click="closeModal('addSubject')">
+        <div class="modal-dialog" @click.stop>
+          <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+              <h5 class="modal-title">Add New Subject</h5>
+              <button type="button" class="btn-close btn-close-white" @click="closeModal('addSubject')"></button>
+            </div>
+            <div class="modal-body">
+              <form @submit.prevent="addSubject">
+                <div class="mb-3">
+                  <label for="subjectName" class="form-label">Subject Name</label>
+                  <input type="text" class="form-control" id="subjectName" v-model="forms.subject.name" required />
+
+                  <label for="subjectName" class="form-label">Subject Description</label>
+                  <input type="text" class="form-control" id="subjectDescription" v-model="forms.subject.description"
+                    required />
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" @click="closeModal('addSubject')">
+                    Cancel
+                  </button>
+                  <button type="submit" class="btn btn-dark">Add Subject</button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="col-12 text-center mt-4">
-        <button class="btn btn-dark" @click="openAddSubjectModal">
-          <i class="bi bi-plus-circle me-2"></i>Add New Subject
-        </button>
-      </div>
-    </div>
-
-    <!-- Add Subject Modal -->
-    <div v-if="modals.addSubject" class="modal-backdrop" @click="closeModal('addSubject')">
-      <div class="modal-dialog" @click.stop>
-        <div class="modal-content">
-          <div class="modal-header bg-dark text-white">
-            <h5 class="modal-title">Add New Subject</h5>
-            <button type="button" class="btn-close btn-close-white" @click="closeModal('addSubject')"></button>
+      <!-- Edit Subject Modal -->
+      <div v-if="modals.editSubject" class="modal-backdrop" @click="closeModal('editSubject')">
+        <div class="modal-dialog" @click.stop>
+          <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+              <h5 class="modal-title">Edit Subject</h5>
+              <button type="button" class="btn-close" @click="closeModal('editSubject')"></button>
+            </div>
+            <div class="modal-body">
+              <form @submit.prevent="updateSubject">
+                <div class="mb-3">
+                  <label for="editSubjectName" class="form-label">Subject Name</label>
+                  <input type="text" class="form-control" id="editSubjectName" v-model="forms.subject.name" required />
+                </div>
+                <div class="mb-3">
+                  <label for="editSubjectDescription" class="form-label">Subject Description</label>
+                  <input type="text" class="form-control" id="editSubjectdescription"
+                    v-model="forms.subject.description" required />
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" @click="closeModal('editSubject')">
+                    Cancel
+                  </button>
+                  <button type="submit" class="btn btn-dark">
+                    Update Subject
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-          <div class="modal-body">
-            <form @submit.prevent="addSubject">
-              <div class="mb-3">
-                <label for="subjectName" class="form-label">Subject Name</label>
-                <input type="text" class="form-control" id="subjectName" v-model="forms.subject.name" required />
+        </div>
+      </div>
 
-                <label for="subjectName" class="form-label">Subject Description</label>
-                <input type="text" class="form-control" id="subjectDescription" v-model="forms.subject.description"
-                  required />
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" @click="closeModal('addSubject')">
-                  Cancel
-                </button>
-                <button type="submit" class="btn btn-dark">Add Subject</button>
-              </div>
-            </form>
+      <!-- Delete Subject Confirmation Modal -->
+      <div v-if="modals.deleteSubject" class="modal-backdrop" @click="closeModal('deleteSubject')">
+        <div class="modal-dialog" @click.stop>
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Confirm Delete</h5>
+              <button type="button" class="btn-close" @click="closeModal('deleteSubject')"></button>
+            </div>
+            <div class="modal-body">
+              <p>
+                Are you sure you want to delete the subject "{{
+                  currentSubject?.name
+                }}"? This will also delete all associated chapters.
+              </p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" @click="closeModal('deleteSubject')">
+                Cancel
+              </button>
+              <button type="button" class="btn btn-danger" @click="deleteSubject">
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Chapter Modal -->
+      <div v-if="modals.addChapter" class="modal-backdrop" @click="closeModal('addChapter')">
+        <div class="modal-dialog" @click.stop>
+          <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+              <h5 class="modal-title">
+                Add Chapter to {{ currentSubject?.name }}
+              </h5>
+              <button type="button" class="btn-close" @click="closeModal('addChapter')"></button>
+            </div>
+            <div class="modal-body">
+              <form @submit.prevent="addChapter">
+                <div class="mb-3">
+                  <label for="chapterName" class="form-label">Chapter Name</label>
+                  <input type="text" class="form-control" id="chapterName" v-model="forms.chapter.name" required />
+                </div>
+
+                <div class="mb-3">
+                  <label for="chapterDescriptiion" class="form-label">Chapter Description</label>
+                  <input type="text" class="form-control" id="chapterDescription" v-model="forms.chapter.description"
+                    required />
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" @click="closeModal('addChapter')">
+                    Cancel
+                  </button>
+                  <button type="submit" class="btn btn-dark">Add Chapter</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit Chapter Modal -->
+      <div v-if="modals.editChapter" class="modal-backdrop" @click="closeModal('editChapter')">
+        <div class="modal-dialog" @click.stop>
+          <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+              <h5 class="modal-title">Edit Chapter</h5>
+              <button type="button" class="btn-close" @click="closeModal('editChapter')"></button>
+            </div>
+            <div class="modal-body">
+              <form @submit.prevent="updateChapter">
+                <div class="mb-3">
+                  <label for="editChapterName" class="form-label">Chapter Name</label>
+                  <input type="text" class="form-control" id="editChapterName" v-model="forms.chapter.name" required />
+                </div>
+                <div class="mb-3">
+                  <label for="chapterDescriptiion" class="form-label">Chapter Description</label>
+                  <input type="text" class="form-control" id="chapterDescription" v-model="forms.chapter.description"
+                    required />
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" @click="closeModal('editChapter')">
+                    Cancel
+                  </button>
+                  <button type="submit" class="btn btn-dark">
+                    Update Chapter
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete Chapter Confirmation Modal -->
+      <div v-if="modals.deleteChapter" class="modal-backdrop" @click="closeModal('deleteChapter')">
+        <div class="modal-dialog" @click.stop>
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Confirm Delete</h5>
+              <button type="button" class="btn-close" @click="closeModal('deleteChapter')"></button>
+            </div>
+            <div class="modal-body">
+              <p>
+                Are you sure you want to delete the chapter "{{
+                  currentChapter?.name
+                }}"?
+              </p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" @click="closeModal('deleteChapter')">
+                Cancel
+              </button>
+              <button type="button" class="btn btn-danger" @click="deleteChapter">
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Edit Subject Modal -->
-    <div v-if="modals.editSubject" class="modal-backdrop" @click="closeModal('editSubject')">
-      <div class="modal-dialog" @click.stop>
-        <div class="modal-content">
-          <div class="modal-header bg-dark text-white">
-            <h5 class="modal-title">Edit Subject</h5>
-            <button type="button" class="btn-close" @click="closeModal('editSubject')"></button>
-          </div>
-          <div class="modal-body">
-            <form @submit.prevent="updateSubject">
-              <div class="mb-3">
-                <label for="editSubjectName" class="form-label">Subject Name</label>
-                <input type="text" class="form-control" id="editSubjectName" v-model="forms.subject.name" required />
-              </div>
-              <div class="mb-3">
-                <label for="editSubjectDescription" class="form-label">Subject Description</label>
-                <input type="text" class="form-control" id="editSubjectdescription" v-model="forms.subject.description"
-                  required />
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" @click="closeModal('editSubject')">
-                  Cancel
-                </button>
-                <button type="submit" class="btn btn-dark">
-                  Update Subject
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
+    <FootPage />
 
-    <!-- Delete Subject Confirmation Modal -->
-    <div v-if="modals.deleteSubject" class="modal-backdrop" @click="closeModal('deleteSubject')">
-      <div class="modal-dialog" @click.stop>
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Confirm Delete</h5>
-            <button type="button" class="btn-close" @click="closeModal('deleteSubject')"></button>
-          </div>
-          <div class="modal-body">
-            <p>
-              Are you sure you want to delete the subject "{{
-                currentSubject?.name
-              }}"? This will also delete all associated chapters.
-            </p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="closeModal('deleteSubject')">
-              Cancel
-            </button>
-            <button type="button" class="btn btn-danger" @click="deleteSubject">
-              Delete
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Add Chapter Modal -->
-    <div v-if="modals.addChapter" class="modal-backdrop" @click="closeModal('addChapter')">
-      <div class="modal-dialog" @click.stop>
-        <div class="modal-content">
-          <div class="modal-header bg-dark text-white">
-            <h5 class="modal-title">
-              Add Chapter to {{ currentSubject?.name }}
-            </h5>
-            <button type="button" class="btn-close" @click="closeModal('addChapter')"></button>
-          </div>
-          <div class="modal-body">
-            <form @submit.prevent="addChapter">
-              <div class="mb-3">
-                <label for="chapterName" class="form-label">Chapter Name</label>
-                <input type="text" class="form-control" id="chapterName" v-model="forms.chapter.name" required />
-              </div>
-
-              <div class="mb-3">
-                <label for="chapterDescriptiion" class="form-label">Chapter Description</label>
-                <input type="text" class="form-control" id="chapterDescription" v-model="forms.chapter.description"
-                  required />
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" @click="closeModal('addChapter')">
-                  Cancel
-                </button>
-                <button type="submit" class="btn btn-dark">Add Chapter</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Edit Chapter Modal -->
-    <div v-if="modals.editChapter" class="modal-backdrop" @click="closeModal('editChapter')">
-      <div class="modal-dialog" @click.stop>
-        <div class="modal-content">
-          <div class="modal-header bg-dark text-white">
-            <h5 class="modal-title">Edit Chapter</h5>
-            <button type="button" class="btn-close" @click="closeModal('editChapter')"></button>
-          </div>
-          <div class="modal-body">
-            <form @submit.prevent="updateChapter">
-              <div class="mb-3">
-                <label for="editChapterName" class="form-label">Chapter Name</label>
-                <input type="text" class="form-control" id="editChapterName" v-model="forms.chapter.name" required />
-              </div>
-              <div class="mb-3">
-                <label for="chapterDescriptiion" class="form-label">Chapter Description</label>
-                <input type="text" class="form-control" id="chapterDescription" v-model="forms.chapter.description"
-                  required />
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" @click="closeModal('editChapter')">
-                  Cancel
-                </button>
-                <button type="submit" class="btn btn-dark">
-                  Update Chapter
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Delete Chapter Confirmation Modal -->
-    <div v-if="modals.deleteChapter" class="modal-backdrop" @click="closeModal('deleteChapter')">
-      <div class="modal-dialog" @click.stop>
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Confirm Delete</h5>
-            <button type="button" class="btn-close" @click="closeModal('deleteChapter')"></button>
-          </div>
-          <div class="modal-body">
-            <p>
-              Are you sure you want to delete the chapter "{{
-                currentChapter?.name
-              }}"?
-            </p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="closeModal('deleteChapter')">
-              Cancel
-            </button>
-            <button type="button" class="btn btn-danger" @click="deleteChapter">
-              Delete
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
-
-  <FootPage />
 </template>
 
 <script>
@@ -351,10 +344,10 @@ export default {
   },
   computed: {
     isAuthenticated() {
-      return this.$store.getters.isLoggedIn;
+      return window.sessionStorage.getItem('isAuthenticated') === 'true';
     },
-    currentUser() {
-      return this.$store.getters.getCurrentUser;
+    user(){
+      return JSON.parse(window.sessionStorage.getItem('user'));
     },
     subjects() {
       // Always read from Vuex store
@@ -370,7 +363,11 @@ export default {
   methods: {
     async fetchSubjects() {
       try {
-        const response = await fetch("http://127.0.0.1:5000/api/subjects");
+        console.log("window.sessionStorage", window.sessionStorage.getItem('user'));
+
+        const response = await fetch("http://127.0.0.1:5000/api/subjects", {
+          method: "GET"
+        });
         const data = await response.json();
         // You *may* have a chapters field on each subject after another API call
         // If not, just work with subjects for now
@@ -398,13 +395,13 @@ export default {
       this.messages.splice(index, 1);
     },
 
-  showMessage(text, type = 'success') {
-    this.message = text;
-    this.messageType = type;
-    setTimeout(() => {
-      this.message = '';
-    }, 5000);
-  },
+    showMessage(text, type = 'success') {
+      this.message = text;
+      this.messageType = type;
+      setTimeout(() => {
+        this.message = '';
+      }, 5000);
+    },
 
     // Modal management
     openModal(modalName) {
@@ -457,13 +454,15 @@ export default {
 
       try {
         // API call to add subject
-        console.log("JWT token:", this.$store.state.token);
+
+        const token = window.sessionStorage.getItem('token');
+        console.log(token)
 
         const response = await fetch("http://127.0.0.1:5000/api/subjects", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${this.$store.state.token}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             name: this.forms.subject.name,
@@ -505,7 +504,7 @@ export default {
       try {
         // API call to add subject
         const subject_id = this.currentSubject.id;
-        const token = localStorage.getItem("token");
+        const token = window.sessionStorage.getItem('token');
         console.log("JWT token:", token);
         const response = await fetch(
           `http://127.0.0.1:5000/api/subjects/${subject_id}`,
@@ -545,7 +544,7 @@ export default {
         // API call to add subject
         console.log("JWT token:", this.$store.state.token);
         const subject_id = this.currentSubject.id;
-        const token = localStorage.getItem("token");
+        const token = window.sessionStorage.getItem('token');
         const response = await fetch(
           `http://127.0.0.1:5000/api/subjects/${subject_id}`,
           {
@@ -608,7 +607,7 @@ export default {
         // API call to add subject
         console.log("JWT token:", this.$store.state.token);
         const subject_id = this.currentSubject.id;
-        const token = localStorage.getItem("token");
+        const token = window.sessionStorage.getItem('token');
 
         const response = await fetch(
           `http://127.0.0.1:5000/api/subjects/${subject_id}/chapters`,
@@ -645,7 +644,7 @@ export default {
     },
 
     async updateChapter() {
-      const token = localStorage.getItem("token");
+      const token = window.sessionStorage.getItem('token');
 
       try {
         const chapter_id = this.currentChapter.id;
@@ -689,7 +688,7 @@ export default {
         // API call to add subject
         console.log("JWT token:", this.$store.state.token);
         const chapter_id = this.currentChapter.id;
-        const token = localStorage.getItem("token");
+        const token = window.sessionStorage.getItem('token');
         const response = await fetch(
           `http://127.0.0.1:5000/api/chapters/${chapter_id}`,
           {
@@ -728,7 +727,6 @@ export default {
 </script>
 
 <style scoped>
-
 .toast-container .toast {
   min-width: 250px;
 }

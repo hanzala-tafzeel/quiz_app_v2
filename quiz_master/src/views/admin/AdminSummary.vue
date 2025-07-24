@@ -163,8 +163,7 @@
 </template>
 
 <script>
-// ADDED: Import Chart.js
-// import Chart from 'chart.js/auto';
+import Chart from 'chart.js/auto';
 import AdminNavBar from '@/components/AdminNavBar.vue';
 import FootPage from '@/components/FootPage.vue';
 
@@ -196,7 +195,7 @@ export default {
      //Method to fetch dashboard data
     async fetchDashboardData() {
       try {
-        const token = localStorage.getItem("token");
+        const token = window.sessionStorage.getItem('token');
         const response = await fetch('http://127.0.0.1:5000/api/admin/summary', {
           method: 'GET',
           headers: {
@@ -304,7 +303,7 @@ export default {
   // ADDED: Enhanced data fetching with better error handling
   async fetchDashboardData() {
     try {
-      const token = localStorage.getItem("token");
+      const token = window.sessionStorage.getItem('token');
       const response = await fetch('http://127.0.0.1:5000/api/admin/summary', {
         method: 'GET',
         headers: {

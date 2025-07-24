@@ -28,10 +28,6 @@ export default {
         <!-- <a class="nav-link " href="{{url_for('quiz_management')}}"><i class="bi bi-clipboard me-2"></i>Quiz</a> -->
     </li>
     <li class="nav-item rounded">
-        <router-link to="/questionmanagement" class="nav-link"><i class="bi bi-question me-2"></i>Questions</router-link>
-
-    </li>
-    <li class="nav-item rounded">
         <!-- <a class="nav-link" href="{{url_for('admin_summary')}}"><i class="bi bi-book-half me-2"></i>Summary </a> -->
         <router-link to="/summary" class="nav-link"><i class="bi bi-book-half me-2"></i>Summary</router-link>
     </li>
