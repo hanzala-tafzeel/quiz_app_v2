@@ -58,7 +58,7 @@
           </div>
           <div class="col-lg-6 text-center">
             <img 
-              src="/static/images/quizmaster3.png" 
+              src="./../assets/quiz_logo.png" 
               width="350" 
               alt="Quiz App Illustration" 
               class="img-fluid rounded-3 shadow"
