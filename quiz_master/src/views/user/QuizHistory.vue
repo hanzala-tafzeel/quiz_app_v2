@@ -1,6 +1,6 @@
 <template>
 
-  <NavBar/>
+  <NavBar />
   <div class="container py-4">
     <!-- Page Header -->
     <div class="row mb-4">
@@ -13,14 +13,11 @@
             </h2>
             <p class="text-muted mb-0">Track your quiz performance and progress</p>
           </div>
+
           <div>
-            <button 
-              @click="fetchAttempts" 
-              class="btn btn-outline-primary"
-              :disabled="loading"
-            >
+            <button @click="export_data" class="btn btn-outline-primary" :disabled="loading">
               <i class="bi bi-arrow-clockwise me-2"></i>
-              {{ loading ? 'Refreshing...' : 'Refresh' }}
+              {{ loading ? 'Exporting...' : 'Export Data' }}
             </button>
           </div>
         </div>
@@ -90,10 +87,7 @@
       </div>
       <h4 class="text-muted mb-3">No Quiz Attempts Yet</h4>
       <p class="text-muted mb-4">Start taking quizzes to see your history here</p>
-      <button 
-        @click="$router.push('/')" 
-        class="btn btn-primary btn-lg"
-      >
+      <button @click="$router.push('/')" class="btn btn-primary btn-lg">
         <i class="bi bi-play-circle me-2"></i>Take Your First Quiz
       </button>
     </div>
@@ -123,19 +117,13 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr 
-                    v-for="attempt in paginatedAttempts" 
-                    :key="attempt.id"
-                    class="attempt-row"
-                  >
+                  <tr v-for="attempt in paginatedAttempts" :key="attempt.id" class="attempt-row">
                     <td>
                       <div class="d-flex align-items-center">
                         <div class="me-3">
-                          <div 
-                            class="rounded-circle d-flex align-items-center justify-content-center"
+                          <div class="rounded-circle d-flex align-items-center justify-content-center"
                             :class="getStatusColor(attempt.percentage)"
-                            style="width: 40px; height: 40px; font-size: 0.8rem; font-weight: bold;"
-                          >
+                            style="width: 40px; height: 40px; font-size: 0.8rem; font-weight: bold;">
                             {{ attempt.percentage.toFixed(0) }}%
                           </div>
                         </div>
@@ -156,37 +144,25 @@
                     </td>
                     <td class="text-center">
                       <div class="progress" style="height: 20px;">
-                        <div 
-                          class="progress-bar"
-                          :class="getProgressBarClass(attempt.percentage)"
-                          :style="{ width: attempt.percentage + '%' }"
-                        >
+                        <div class="progress-bar" :class="getProgressBarClass(attempt.percentage)"
+                          :style="{ width: attempt.percentage + '%' }">
                           {{ attempt.percentage.toFixed(1) }}%
                         </div>
                       </div>
                     </td>
                     <td class="text-center">
-                      <span 
-                        class="badge"
-                        :class="attempt.is_completed ? 'bg-success' : 'bg-warning'"
-                      >
+                      <span class="badge" :class="attempt.is_completed ? 'bg-success' : 'bg-warning'">
                         {{ attempt.is_completed ? 'Completed' : 'In Progress' }}
                       </span>
                     </td>
                     <td class="text-center">
-                      <button 
-                        @click="viewResults(attempt.id)"
-                        class="btn btn-sm btn-outline-primary me-2"
-                        :disabled="!attempt.is_completed"
-                      >
+                      <button @click="viewResults(attempt.id)" class="btn btn-sm btn-outline-primary me-2"
+                        :disabled="!attempt.is_completed">
                         <i class="bi bi-eye"></i>
                       </button>
-                      <router-link 
-                        :to="`/user/quiz/${attempt.quiz_id}`"
-                        class="btn btn-sm btn-outline-info ms-2"
-                        v-if="attempt.is_completed"
-                      >
-                      <i class="bi bi-arrow-clockwise"></i>
+                      <router-link :to="`/user/quiz/${attempt.quiz_id}`" class="btn btn-sm btn-outline-info ms-2"
+                        v-if="attempt.is_completed">
+                        <i class="bi bi-arrow-clockwise"></i>
                       </router-link>
                     </td>
                   </tr>
@@ -197,53 +173,38 @@
 
           <!-- Mobile View -->
           <div class="d-md-none">
-            <div 
-              v-for="attempt in paginatedAttempts" 
-              :key="attempt.id"
-              class="border-bottom p-3"
-            >
+            <div v-for="attempt in paginatedAttempts" :key="attempt.id" class="border-bottom p-3">
               <div class="d-flex align-items-start justify-content-between mb-2">
                 <div class="flex-grow-1">
                   <h6 class="mb-1">{{ attempt.quiz_title }}</h6>
-                  <small class="text-muted">{{ formatDate(attempt.start_time) }} at {{ formatTime(attempt.start_time) }}</small>
+                  <small class="text-muted">{{ formatDate(attempt.start_time) }} at {{ formatTime(attempt.start_time)
+                  }}</small>
                 </div>
                 <div class="text-end">
-                  <div 
-                    class="badge fs-6 px-2 py-1"
-                    :class="getScoreBadgeClass(attempt.percentage)"
-                  >
+                  <div class="badge fs-6 px-2 py-1" :class="getScoreBadgeClass(attempt.percentage)">
                     {{ attempt.percentage.toFixed(1) }}%
                   </div>
                 </div>
               </div>
-              
+
               <div class="row align-items-center mb-3">
                 <div class="col-6">
                   <small class="text-muted">Score:</small>
                   <div class="fw-bold">{{ attempt.score }} / {{ attempt.total_marks }}</div>
                 </div>
                 <div class="col-6 text-end">
-                  <span 
-                    class="badge"
-                    :class="attempt.is_completed ? 'bg-success' : 'bg-warning'"
-                  >
+                  <span class="badge" :class="attempt.is_completed ? 'bg-success' : 'bg-warning'">
                     {{ attempt.is_completed ? 'Completed' : 'In Progress' }}
                   </span>
                 </div>
               </div>
-              
+
               <div class="d-flex gap-2">
-                <button 
-                  @click="viewResults(attempt.id)"
-                  class="btn btn-sm btn-outline-primary flex-fill"
-                  :disabled="!attempt.is_completed"
-                >
+                <button @click="viewResults(attempt.id)" class="btn btn-sm btn-outline-primary flex-fill"
+                  :disabled="!attempt.is_completed">
                   <i class="bi bi-eye me-1"></i>View Results
                 </button>
-                <button 
-                  @click="retakeQuiz(attempt.quiz_id)"
-                  class="btn btn-sm btn-outline-secondary flex-fill"
-                >
+                <button @click="retakeQuiz(attempt.quiz_id)" class="btn btn-sm btn-outline-secondary flex-fill">
                   <i class="bi bi-arrow-clockwise me-1"></i>Retake
                 </button>
               </div>
@@ -257,33 +218,18 @@
         <nav>
           <ul class="pagination">
             <li class="page-item" :class="{ disabled: currentPage === 1 }">
-              <button 
-                class="page-link text-black" 
-                @click="changePage(currentPage - 1)"
-                :disabled="currentPage === 1"
-              >
+              <button class="page-link text-black" @click="changePage(currentPage - 1)" :disabled="currentPage === 1">
                 Previous
               </button>
             </li>
-            <li 
-              v-for="page in visiblePages" 
-              :key="page"
-              class="page-item" 
-              :class="{ active: currentPage === page }"
-            >
-              <button 
-                class="page-link text-black" 
-                @click="changePage(page)"
-              >
+            <li v-for="page in visiblePages" :key="page" class="page-item" :class="{ active: currentPage === page }">
+              <button class="page-link text-black" @click="changePage(page)">
                 {{ page }}
               </button>
             </li>
             <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-              <button 
-                class="page-link text-black" 
-                @click="changePage(currentPage + 1)"
-                :disabled="currentPage === totalPages"
-              >
+              <button class="page-link text-black" @click="changePage(currentPage + 1)"
+                :disabled="currentPage === totalPages">
                 Next
               </button>
             </li>
@@ -293,7 +239,7 @@
     </div>
   </div>
 
-  <FootPage/>
+  <FootPage />
 </template>
 
 <script>
@@ -301,10 +247,10 @@ import NavBar from '@/components/NavBar.vue';
 import FootPage from '@/components/FootPage.vue';
 export default {
   name: 'QuizHistory',
-  components:{
+  components: {
     NavBar,
     FootPage,
-  },     
+  },
   data() {
     return {
       loading: false,
@@ -345,7 +291,7 @@ export default {
       const pages = [];
       const start = Math.max(1, this.currentPage - 2);
       const end = Math.min(this.totalPages, this.currentPage + 2);
-      
+
       for (let i = start; i <= end; i++) {
         pages.push(i);
       }
@@ -353,10 +299,71 @@ export default {
     }
   },
   methods: {
+
+    async export_data() {
+      this.loading = true;
+      const token = window.sessionStorage.getItem('token');
+
+
+      // api call to generate CSV 
+      const response = await fetch('http://127.0.0.1:5000/api/generate_csv', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const task_id = (await response.json()).task_id;
+
+      if (response.status === 200) {
+        const interval = setInterval(async () => {
+          const token = window.sessionStorage.getItem('token');
+          const statusResponse = await fetch(`http://127.0.0.1:5000/api/get_csv_data/${task_id}`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (statusResponse.ok) {
+            console.log('CSV data generated successfully');
+            window.open(`http://127.0.0.1:5000/api/get_csv_data/${task_id}`);
+            clearInterval(interval);
+            this.loading = false;
+          }
+          // Handle error cases (404, 500, etc.) - stop polling
+          else if (statusResponse.status === 404) {
+            console.log('No quiz attempts found for this user');
+            alert('No quiz attempts found to export');
+            clearInterval(interval);
+            this.loading = false;
+          }
+          else if (statusResponse.status === 500) {
+            console.error('Export failed');
+            alert('Export failed. Please try again.');
+            clearInterval(interval);
+            this.loading = false;
+          }
+          // For 202 (pending), continue polling
+
+        }, 2000); // Changed from 100ms to 2000ms (2 seconds) - less aggressive polling
+      }
+
+      console.log('CSV generation started with task ID:', task_id);
+
+      if (!response.ok) {
+        console.error('Failed to start CSV generation');
+        this.loading = false;
+        return;
+      }
+    },
+
     async fetchAttempts() {
       try {
         this.loading = true;
-        
+
         const token = window.sessionStorage.getItem('token');
         const response = await fetch('http://127.0.0.1:5000/api/attempts', {
           method: 'GET',
@@ -369,7 +376,7 @@ export default {
         if (response.ok) {
           const data = await response.json();
           // Sort attempts by start_time in descending order (newest first)
-          this.attempts = data.attempts.sort((a, b) => 
+          this.attempts = data.attempts.sort((a, b) =>
             new Date(b.start_time) - new Date(a.start_time)
           );
         } else {

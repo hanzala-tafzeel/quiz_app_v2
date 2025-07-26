@@ -1,5 +1,6 @@
 <template>
   <!-- page for user dashboard -->
+  <div class="page-wrapper d-flex flex-column min-vh-100">
 
   <NavPage />
 
@@ -283,6 +284,9 @@
   </div>
 
   <FootPage />
+
+
+  </div>  
 </template>
 
 <script>

@@ -1,5 +1,6 @@
 <template>
 
+<div class="page-wrapper d-flex flex-column min-vh-100">
     <NavBar />
   <div class="container py-5 flex-grow-1"> 
     <div class="row justify-content-center align-items-center p-0">
@@ -133,10 +134,9 @@
     </div>
   </div>
 
-  <div class="mt-5 mb-5">
     
-  </div>
   <FootPage />
+</div>
 </template>
 
 <script>

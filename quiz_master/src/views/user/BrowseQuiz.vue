@@ -1,5 +1,5 @@
 <template>
-
+ <div class="page-wrapper d-flex flex-column min-vh-100">
   <NavBar />
   <div class="container py-4">
 
@@ -377,6 +377,7 @@
   </div>
 
   <FootPage />
+  </div>
 </template>
 
 <script>

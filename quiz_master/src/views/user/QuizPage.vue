@@ -1,4 +1,5 @@
 <template>
+  
   <div>
     <!-- Start Quiz Modal -->
     <div v-if="showStartModal" class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">

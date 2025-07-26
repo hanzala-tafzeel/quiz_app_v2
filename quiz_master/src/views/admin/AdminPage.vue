@@ -31,7 +31,7 @@
 
 
         <div class="col-md-6">
-          <h3 v-if="isAuthenticated " class="text-secondary">
+          <h3 v-if="isAuthenticated" class="text-secondary">
             Welcome, {{ capitalize(user.username) }}!
           </h3>
           <div v-else>
@@ -180,9 +180,9 @@
       <div v-if="modals.deleteSubject" class="modal-backdrop" @click="closeModal('deleteSubject')">
         <div class="modal-dialog" @click.stop>
           <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header bg-dark text-white ">
               <h5 class="modal-title">Confirm Delete</h5>
-              <button type="button" class="btn-close" @click="closeModal('deleteSubject')"></button>
+              <button type="button" class="btn-close btn-close-white" @click="closeModal('deleteSubject')"></button>
             </div>
             <div class="modal-body">
               <p>
@@ -274,9 +274,9 @@
       <div v-if="modals.deleteChapter" class="modal-backdrop" @click="closeModal('deleteChapter')">
         <div class="modal-dialog" @click.stop>
           <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header bg-dark text-white">
               <h5 class="modal-title">Confirm Delete</h5>
-              <button type="button" class="btn-close" @click="closeModal('deleteChapter')"></button>
+              <button type="button" class="btn-close btn-close-white" @click="closeModal('deleteChapter')"></button>
             </div>
             <div class="modal-body">
               <p>
@@ -346,7 +346,7 @@ export default {
     isAuthenticated() {
       return window.sessionStorage.getItem('isAuthenticated') === 'true';
     },
-    user(){
+    user() {
       return JSON.parse(window.sessionStorage.getItem('user'));
     },
     subjects() {
@@ -545,9 +545,7 @@ export default {
         console.log("JWT token:", this.$store.state.token);
         const subject_id = this.currentSubject.id;
         const token = window.sessionStorage.getItem('token');
-        const response = await fetch(
-          `http://127.0.0.1:5000/api/subjects/${subject_id}`,
-          {
+        const response = await fetch(`http://127.0.0.1:5000/api/subjects/${subject_id}`,{
             method: "DELETE",
             headers: {
               "Content-Type": "application/json",
@@ -777,10 +775,9 @@ export default {
 
 .modal-header {
   display: flex;
-  justify-content: between;
+  justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  /* border-bottom: 1px solid #dee2e6; */
 }
 
 .modal-title {
@@ -788,12 +785,7 @@ export default {
   flex-grow: 1;
 }
 
-.btn-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-}
+
 
 .modal-body {
   padding: 1rem;

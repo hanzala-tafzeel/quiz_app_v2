@@ -1,5 +1,6 @@
 <template>
 
+<div class="page-wrapper d-flex flex-column min-vh-100">
   <NavPage/>
   <div class="container py-4">
     <!-- Loading State -->
@@ -199,6 +200,8 @@
 
       
     </div>
+  </div>
+
   </div>
 
   <FootPage/>
