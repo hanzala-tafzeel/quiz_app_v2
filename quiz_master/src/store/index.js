@@ -8,7 +8,8 @@ export default createStore({
     isAuthenticated: false,
     quizzes: [],
     subjects: [] ,
-    chapters: []
+    chapters: [],
+    BASE_URL: 'http://127.0.1:5000/api'
   },
   mutations: {
     SET_LOGIN_DATA(state, payload) {
@@ -55,5 +56,42 @@ export default createStore({
     //   return state.subjects.flatMap(subject => subject.chapters || []);
     // }
   },
-  actions: {}
+  actions: {
+
+    loadAuthFromStorage({ commit }) {
+      const token = sessionStorage.getItem('token')
+      const user = sessionStorage.getItem('user')
+      const userRole = sessionStorage.getItem('userRole') // Add this line
+      
+      if (token && user && userRole) { // Check userRole too
+        try {
+          const parsedUser = JSON.parse(user)
+          commit('SET_LOGIN_DATA', { 
+            user: parsedUser, 
+            token: token,
+            userRole: userRole // Add this line
+          })
+        } catch (error) {
+          console.error('Error parsing user data from storage:', error)
+          sessionStorage.removeItem('token')
+          sessionStorage.removeItem('user')
+          sessionStorage.removeItem('userRole') // Clear this too
+        }
+      }
+    },
+    logout({ commit }) {
+      // Clear the store state
+      commit('CLEAR_LOGIN_DATA')
+      
+      // Clear sessionStorage
+      sessionStorage.removeItem('token')
+      sessionStorage.removeItem('user')
+      sessionStorage.removeItem('userRole')
+      sessionStorage.removeItem('isAuthenticated')
+      
+      // Or clear all sessionStorage
+      // sessionStorage.clear()
+    }
+    
+  }
 })

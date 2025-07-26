@@ -1,11 +1,18 @@
 # routes.py - Standard Flask Routes (converted from Flask-RESTful)
-from flask import request, jsonify, abort
+from flask import request, jsonify, abort , send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token, verify_jwt_in_request
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, date
 from functools import wraps
+from Celery.tasks import export_user_quiz_history, add
+from celery.result import AsyncResult
+from flask_mail import Message
+
+
+
 
 from models import db, User, Subject, Chapter, Quiz, Question, QuizAttempt, QuestionResponse
+
 
 # ------------------------------ Auth Helpers ----------------------------- #
 
@@ -23,12 +30,61 @@ def admin_required(func):
 
 def register_routes(app):
     """Register all routes with the Flask app"""
+    cache = app.cache  
+
+
+    # flask mail check 
+
+    @app.route('/api/send-notification', methods=['POST'])
+    @jwt_required()
+    def send_notification():
+        mail = app.mail  # Access mail instance
+        
+        msg = Message(
+            subject="Quiz Export Ready",
+            recipients=["bytescode0115@gmail.com"],
+            body="Your quiz history export is ready for download."
+        )
+        
+        mail.send(msg)
+        return jsonify({"message": "Email sent successfully"})
+
+    @app.route('/api/generate_csv', methods=['GET'])
+    @jwt_required()
+    def celery_test():
+        id = get_jwt_identity()
+        task = export_user_quiz_history.delay(id)
+        if not task:
+            return jsonify({"error": "Failed to start task"}), 500
+        return jsonify({"task_id": task.id}), 200
+    
+    @app.route('/api/get_csv_data/<id>', methods=['GET'])
+    def async_data(id):
+        result = AsyncResult(id)
+        if result.ready():
+            if result.result == "NO_ATTEMPTS":
+                return jsonify({"error": "No quiz attempts found for this user"}), 404
+            elif result.result == "ERROR":
+                return jsonify({"error": "Export failed"}), 500
+            else:
+                return send_file(f'./user-downloads/{result.result}')
+        else:
+            return jsonify({"status": "pending"}), 202
+
+
+    @app.get('/cache')
+    @cache.cached(timeout=5)
+    def cache_test():
+        """Test route to check if caching is working"""
+        return jsonify({"message": str(datetime.now())})
+
+
 
     # ------------------------------ User Routes ----------------------------- #
-
     @app.route('/api/users', methods=['GET'])
     @jwt_required()
     @admin_required
+    @cache.cached(timeout=10)
     def list_users():
         users = User.query.all()
         return jsonify({"users": [u.to_dict() for u in users]})
@@ -94,9 +150,9 @@ def register_routes(app):
         new_user = User(username=username, password=generate_password_hash(password), email=email, phone=phone)
         db.session.add(new_user)
         db.session.commit()
-        return jsonify({"message": "Registration successful", "user_id": new_user.id})
+        return jsonify({"message": "Registartion successful", "user_id": new_user.id})
 
-# ------------------------------- admin routes ------------------------------- #
+
     @app.route('/api/user', methods=['GET', 'PUT'])
     @jwt_required()
     def current_user():
@@ -113,13 +169,17 @@ def register_routes(app):
 
     # ------------------------------ Subject Routes ----------------------------- #
 
-    @app.route('/api/subjects', methods=['GET', 'POST'])
-    def subjects():
+    @app.route('/api/subjects/', methods=['GET'])
+    @cache.cached(timeout=10, key_prefix='subjects_list')
+    def get_subjects():
         if request.method == 'GET':
             subjects = Subject.query.all()
             return jsonify({"subjects": [s.to_dict() for s in subjects]})
-        verify_jwt_in_request()
-        admin_required(lambda: None)()
+
+    @app.route('/api/subjects', methods=['POST'])
+    @jwt_required()
+    @admin_required
+    def subjects():
         data = request.get_json() or {}
         name = data.get('name')
         if Subject.query.filter_by(name=name).first():
@@ -127,6 +187,7 @@ def register_routes(app):
         new_subject = Subject(name=name, description=data.get('description'))
         db.session.add(new_subject)
         db.session.commit()
+        cache.delete('subjects_list')
         return jsonify({"message": "Subject added successfully"})
 
     @app.route('/api/subjects/<int:subject_id>', methods=['GET', 'PUT', 'DELETE'])
@@ -144,6 +205,7 @@ def register_routes(app):
             return jsonify({"message": "Subject updated successfully", "subject": subject.to_dict()})
         db.session.delete(subject)
         db.session.commit()
+        cache.delete('subjects_list')
         return jsonify({"message": "Subject deleted successfully"})
 
     @app.route('/api/subjects/search', methods=['POST'])
@@ -173,7 +235,10 @@ def register_routes(app):
         db.session.commit()
         return jsonify({"message": "Chapter added successfully", "chapter": new_chapter.to_dict()})
     
+    # --------------------------- get for all chapters --------------------------- #
+
     @app.route('/api/chapters', methods = ['GET'])
+    @cache.cached(timeout=10) 
     def chapters():
         chapters = Chapter.query.all()
         return jsonify({"chapters": [c.to_dict() for c in chapters]})
@@ -198,46 +263,174 @@ def register_routes(app):
 
     # ------------------------------ Quiz Routes ----------------------------- #
 
-    @app.route('/api/quizzes', methods=['GET', 'POST'])
-    def quizzes():
+    @app.route('/api/quizzes', methods=['GET'])
+    @cache.cached(timeout=10)
+    def get_quizzes():
         if request.method == 'GET':
             quizzes = Quiz.query.all()
             return jsonify({"quizzes": [q.to_dict() for q in quizzes]})
-        verify_jwt_in_request()
-        admin_required(lambda: None)()
+
+    # ------------------------------ Quiz Post Route ----------------------------- #
+    @app.route('/api/quizzes', methods=['POST'])
+    @jwt_required()
+    @admin_required
+    def quizzes():
         data = request.get_json() or {}
-        new_quiz = Quiz(
-            title=data.get('title'),
-            description=data.get('description'),
-            duration=data.get('duration'),
-            schedule_date=datetime.strptime(data.get('date'), "%Y-%m-%d").date(),
-            chapter_id=data.get('chapter_id')
-        )
-        db.session.add(new_quiz)
-        db.session.commit()
-        return jsonify({"message": "Quiz added successfully", "quizzes": new_quiz.to_dict()})
+        start_datetime = None
+        end_datetime = None
+        print("Incoming data →", data)
+        
+        try:
+            # start_datetime field (if provided and not empty)
+            if data.get('start_datetime') and data.get('start_datetime').strip():
+                print("Processing start_datetime")
+                start_datetime = datetime.fromisoformat(data.get('start_datetime'))
+            
+            # end_datetime field (if provided and not empty)
+            if data.get('end_datetime') and data.get('end_datetime').strip():
+                print("Processing end_datetime")
+                end_datetime = datetime.fromisoformat(data.get('end_datetime'))
+            
+            # FALLBACK: Handle legacy 'date' field if datetime fields are empty
+            if not start_datetime and data.get('date') and data.get('date').strip():
+                print('Processing legacy date field')
+                schedule_date = datetime.strptime(data.get('date'), "%Y-%m-%d").date()
+                start_datetime = datetime.combine(schedule_date, datetime.min.time())
+                
+        except (ValueError, TypeError) as e:
+            return jsonify({
+                "error": f"Invalid date/time format: {str(e)}"
+            }), 400
+        
+        # Only validate if datetime fields are provided
+        if start_datetime and start_datetime <= datetime.now():
+            return jsonify({"error": "Start time must be in the future"}), 400
+        
+        # FIXED: Only validate end_datetime if both start and end are provided
+        if start_datetime and end_datetime and end_datetime <= start_datetime:
+            return jsonify({"error": "End time must be after start time"}), 400
 
+        # FIXED: Add validation for required fields
+        if not data.get('title') or not data.get('title').strip():
+            return jsonify({"error": "Title is required"}), 400
+        
+        if not data.get('description') or not data.get('description').strip():
+            return jsonify({"error": "Description is required"}), 400
+        
+        if not data.get('duration') or int(data.get('duration', 0)) <= 0:
+            return jsonify({"error": "Duration must be greater than 0"}), 400
+        
+        if not data.get('chapter_id'):
+            return jsonify({"error": "Chapter ID is required"}), 400
 
+        try:
+            new_quiz = Quiz(
+                title=data.get('title'),
+                description=data.get('description'),
+                duration=int(data.get('duration')),
+                schedule_date=start_datetime,        
+                end_date=end_datetime,  # This will be None if empty string was provided
+                chapter_id=int(data.get('chapter_id'))
+            )
+            db.session.add(new_quiz)
+            db.session.commit()
+            return jsonify({"message": "Quiz added successfully", "quiz": new_quiz.to_dict()})
+        
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"error": f"Failed to create quiz: {str(e)}"}), 500
+        
+    # ------------------------------ Quiz UPDATE DELETE Routes ----------------------------- #
+        
     @app.route('/api/quizzes/<int:quiz_id>', methods=['GET', 'PUT', 'DELETE'])
     def quiz_detail(quiz_id):
         quiz = Quiz.query.get_or_404(quiz_id)
         if request.method == 'GET':
             return jsonify(quiz.to_dict())
+        
         verify_jwt_in_request()
         admin_required(lambda: None)()
+        
         if request.method == 'PUT':
             data = request.get_json() or {}
-            quiz.title = data.get('title', quiz.title)
-            quiz.description = data.get('description', quiz.description)
-            quiz.duration = data.get('duration', quiz.duration)
-            if data.get('date'):
-                quiz.schedule_date = datetime.strptime(data.get('date'), "%Y-%m-%d").date()
-            quiz.is_active = data.get('is_active', quiz.is_active)
+            start_datetime = None
+            end_datetime = None
+            print("Incoming data →", data)
+            
+            try:
+                # start_datetime field (if provided and not empty)
+                if data.get('start_datetime') and data.get('start_datetime').strip():
+                    print("Processing start_datetime")
+                    start_datetime = datetime.fromisoformat(data.get('start_datetime'))
+                
+                # end_datetime field (if provided and not empty)
+                if data.get('end_datetime') and data.get('end_datetime').strip():
+                    print("Processing end_datetime")
+                    end_datetime = datetime.fromisoformat(data.get('end_datetime'))
+                
+                # FALLBACK: Handle legacy 'date' field if datetime fields are empty
+                if not start_datetime and data.get('date') and data.get('date').strip():
+                    print('Processing legacy date field')
+                    schedule_date = datetime.strptime(data.get('date'), "%Y-%m-%d").date()
+                    start_datetime = datetime.combine(schedule_date, datetime.min.time())
+                    
+            except (ValueError, TypeError) as e:
+                return jsonify({
+                    "error": f"Invalid date/time format: {str(e)}"
+                }), 400
+            
+            # Remove the future time constraint (as requested in previous conversation)
+            # if start_datetime and start_datetime <= datetime.now():
+            #     return jsonify({"error": "Start time must be in the future"}), 400
+            
+            # Only validate end_datetime if both start and end are provided
+            if start_datetime and end_datetime and end_datetime <= start_datetime:
+                return jsonify({"error": "End time must be after start time"}), 400
+
+            # Validation for required fields (only if they're being updated)
+            if 'title' in data and (not data.get('title') or not data.get('title').strip()):
+                return jsonify({"error": "Title cannot be empty"}), 400
+            
+            if 'description' in data and (not data.get('description') or not data.get('description').strip()):
+                return jsonify({"error": "Description cannot be empty"}), 400
+            
+            if 'duration' in data and (not data.get('duration') or int(data.get('duration', 0)) <= 0):
+                return jsonify({"error": "Duration must be greater than 0"}), 400
+            
+            if 'chapter_id' in data and not data.get('chapter_id'):
+                return jsonify({"error": "Chapter ID is required"}), 400
+
+            try:
+                # Update basic fields
+                quiz.title = data.get('title', quiz.title)
+                quiz.description = data.get('description', quiz.description)
+                quiz.duration = int(data.get('duration', quiz.duration))
+                quiz.chapter_id = int(data.get('chapter_id', quiz.chapter_id))
+                quiz.is_active = data.get('is_active', quiz.is_active)
+                
+                # Update datetime fields
+                if start_datetime is not None:
+                    quiz.schedule_date = start_datetime
+                if 'end_datetime' in data:  # Allow clearing by sending empty string
+                    quiz.end_date = end_datetime  # Will be None if empty string was provided
+                
+                db.session.commit()
+                return jsonify({"message": "Quiz updated successfully", "quiz": quiz.to_dict()})
+            
+            except Exception as e:
+                db.session.rollback()
+                return jsonify({"error": f"Failed to update quiz: {str(e)}"}), 500
+        
+        # DELETE method
+        try:
+            db.session.delete(quiz)
             db.session.commit()
-            return jsonify({"message": "Quiz updated successfully", "quiz": quiz.to_dict()})
-        db.session.delete(quiz)
-        db.session.commit()
-        return jsonify({"message": "Quiz deleted successfully"})
+            return jsonify({"message": "Quiz deleted successfully"})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"error": f"Failed to delete quiz: {str(e)}"}), 500
+
+
 
     @app.route('/api/quizzes/search', methods=['POST'])
     def quiz_search():
@@ -322,6 +515,7 @@ def register_routes(app):
 
     @app.route('/api/attempts', methods=['GET'])
     @jwt_required()
+    @cache.cached(timeout=10)
     def attempts_list():
         user_id = get_jwt_identity()
         attempts = QuizAttempt.query.filter_by(user_id=user_id).all()
@@ -331,7 +525,7 @@ def register_routes(app):
             attempts_list.append({
                 "id": attempt.id,
                 "quiz_id": attempt.quiz_id,
-                "start_time": attempt.strat_time.isoformat() if attempt.strat_time else None,
+                "start_time": attempt.start_time.isoformat() if attempt.start_time else None,
                 "end_time": attempt.end_time.isoformat() if attempt.end_time else None,
                 "is_completed": attempt.is_completed,
                 "score": attempt.score,
@@ -362,7 +556,7 @@ def register_routes(app):
         data = request.get_json() or {}
         responses = data.get('responses', [])
         user_id = get_jwt_identity()
-        quiz_attempt = QuizAttempt(user_id=user_id, quiz_id=quiz.id, strat_time=datetime.now(), is_completed=True)
+        quiz_attempt = QuizAttempt(user_id=user_id, quiz_id=quiz.id, start_time=datetime.now(), is_completed=True)
         db.session.add(quiz_attempt)
         db.session.commit()
         score = 0
@@ -389,6 +583,7 @@ def register_routes(app):
             "responses": saved_responses
         })
 
+    # --------------------------- attempt details route -------------------------- #
     @app.route('/api/attempts/<int:attempt_id>', methods=['GET'])
     @jwt_required()
     def attempt_detail(attempt_id):
@@ -403,7 +598,7 @@ def register_routes(app):
             "score": attempt.score,
             "percentage": (attempt.score / quiz.total_marks * 100) if quiz.total_marks > 0 else 0,
             "passed": attempt.score >= quiz.pass_marks,
-            "start_time": attempt.strat_time.isoformat() if attempt.strat_time else None,
+            "start_time": attempt.start_time.isoformat() if attempt.start_time else None,
             "end_time": attempt.end_time.isoformat() if attempt.end_time else None,
             "questions": [{
                 "id": q.id,
@@ -420,6 +615,7 @@ def register_routes(app):
 
     @app.route('/api/summary', methods=['GET'])
     @jwt_required()
+    @cache.cached(timeout=20)
     def user_summary():
         user_id = get_jwt_identity()
         attempts = QuizAttempt.query.filter_by(user_id=user_id).all()
@@ -429,12 +625,12 @@ def register_routes(app):
         passed = [a for a in attempts if a.score >= Quiz.query.get(a.quiz_id).pass_marks]
         pass_rate = len(passed) / quizzes_taken * 100 if quizzes_taken > 0 else 0
         upcoming_quizzes = Quiz.query.filter(Quiz.schedule_date > datetime.now(), Quiz.is_active == True).count()
-        recent_attempts = QuizAttempt.query.filter(QuizAttempt.user_id == user_id).order_by(QuizAttempt.strat_time.desc()).limit(5).all()
+        recent_attempts = QuizAttempt.query.filter(QuizAttempt.user_id == user_id).order_by(QuizAttempt.start_time.desc()).limit(5).all()
         recent_attempts_data = [{
             'attempt_id': a.id,
             'quiz_id': a.quiz_id,
             'quiz_title': Quiz.query.get(a.quiz_id).title,
-            'date': a.strat_time.strftime('%Y-%m-%d'),
+            'date': a.start_time.strftime('%Y-%m-%d'),
             'score': round(a.score / Quiz.query.get(a.quiz_id).total_marks * 100, 1)
         } for a in recent_attempts]
         subject_perf = {}
@@ -454,10 +650,13 @@ def register_routes(app):
             "recent_attempts": recent_attempts_data,
             "subject_performance": subject_analytics
         })
+    
+    # ------------------------------ Admin Summary Routes ----------------------------- #
 
     @app.route('/api/admin/summary', methods=['GET'])
     @jwt_required()
     @admin_required
+    @cache.cached(timeout=20)
     def admin_summary():
         total_users = User.query.count()
         active_quizzes = Quiz.query.filter_by(is_active=True).count()
@@ -465,7 +664,7 @@ def register_routes(app):
         total_quizzes = Quiz.query.count()
         total_attempts = QuizAttempt.query.count()
         today = date.today()
-        attempts_today = [a for a in QuizAttempt.query.all() if a.strat_time and a.strat_time.date() == today]
+        attempts_today = [a for a in QuizAttempt.query.all() if a.start_time and a.start_time.date() == today]
         attempts_today_data = []
         for a in attempts_today:
             user = User.query.get(a.user_id)
@@ -474,7 +673,7 @@ def register_routes(app):
                 'user': user.username if user else 'Unknown',
                 'quiz_title': quiz.title if quiz else 'Unknown',
                 'score': a.score,
-                'time': a.strat_time.strftime('%H:%M'),
+                'time': a.start_time.strftime('%H:%M'),
                 'completed': a.is_completed
             })
         subject_perf = {}

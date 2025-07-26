@@ -120,6 +120,7 @@
             <div class="modal-header bg-dark text-white">
               <h5 class="modal-title">Add New Subject</h5>
               <button type="button" class="btn-close btn-close-white" @click="closeModal('addSubject')"></button>
+            
             </div>
             <div class="modal-body">
               <form @submit.prevent="addSubject">
@@ -149,7 +150,7 @@
           <div class="modal-content">
             <div class="modal-header bg-dark text-white">
               <h5 class="modal-title">Edit Subject</h5>
-              <button type="button" class="btn-close" @click="closeModal('editSubject')"></button>
+              <button type="button" class="btn-close btn-close-white" @click="closeModal('editSubject')"></button>
             </div>
             <div class="modal-body">
               <form @submit.prevent="updateSubject">
@@ -562,9 +563,10 @@ export default {
           );
         }
 
-        await this.fetchSubjects();
 
         this.showMessage("Subject Deleted successfully!", "success");
+        await this.fetchSubjects();
+
         this.closeModal("deleteSubject");
         this.resetForms();
       } catch (error) {
@@ -835,7 +837,6 @@ export default {
 
 .btn-close {
   position: absolute;
-  background: #000;
   top: 0.75rem;
   right: 1.25rem;
 }

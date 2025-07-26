@@ -2,9 +2,7 @@ from datetime import datetime
 from flask_login import UserMixin 
 from flask_sqlalchemy import SQLAlchemy
 
-
 db = SQLAlchemy()  # instance of sqlalchemy is created
-
 
 class User(db.Model, UserMixin):
     __tablename__ = "user"
@@ -17,6 +15,9 @@ class User(db.Model, UserMixin):
     created_at = db.Column(db.DateTime, default=datetime.now())
     is_active = db.Column(db.Boolean, default=True)
 
+    # ADDED: Relationship to quiz attempts for proper cascading
+    quiz_attempts = db.relationship('QuizAttempt', cascade='all,delete-orphan', backref='user', lazy=True)
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -28,7 +29,6 @@ class User(db.Model, UserMixin):
             "is_active": self.is_active
         }
 
-
 class Subject(db.Model):
     __tablename__ = "subject"
     id = db.Column(db.Integer, primary_key=True)
@@ -36,7 +36,9 @@ class Subject(db.Model):
     description = db.Column(db.String, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now())
     is_active = db.Column(db.Boolean, default=True)
-    chapters = db.relationship('Chapter', cascade='all,delete', backref='subject', lazy=True)
+    
+    # CHANGED: Updated to delete-orphan for cleaner cascade handling
+    chapters = db.relationship('Chapter', cascade='all,delete-orphan', backref='subject', lazy=True)
 
     def to_dict(self):
         return {
@@ -49,7 +51,6 @@ class Subject(db.Model):
             "chapters_count": len(self.chapters) if self.chapters else 0
         }
 
-
 class Chapter(db.Model):
     __tablename__ = "chapter"
     id = db.Column(db.Integer, primary_key=True)
@@ -58,8 +59,9 @@ class Chapter(db.Model):
     subject_id = db.Column(db.Integer, db.ForeignKey("subject.id"), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now())
     is_active = db.Column(db.Boolean, default=True)
-    # relationship between chapter and quiz
-    quizzes = db.relationship('Quiz', cascade='all,delete', backref='chapter', lazy=True)
+    
+    # CHANGED: Updated to delete-orphan for cleaner cascade handling
+    quizzes = db.relationship('Quiz', cascade='all,delete-orphan', backref='chapter', lazy=True)
 
     def to_dict(self):
         return {
@@ -72,38 +74,42 @@ class Chapter(db.Model):
             "quizzes_count": len(self.quizzes) if self.quizzes else 0
         }
 
-
 class Quiz(db.Model):
     __tablename__ = "quiz"
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String, nullable=False, unique=True)
     description = db.Column(db.String, nullable=False)
     schedule_date = db.Column(db.DateTime)
+    end_date = db.Column(db.DateTime)
     duration = db.Column(db.Integer, nullable=False)
     chapter_id = db.Column(db.Integer, db.ForeignKey("chapter.id"), nullable=False)
     total_marks = db.Column(db.Integer, default=0)
     pass_marks = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.now())
     is_active = db.Column(db.Boolean, default=True)
-    # relationship with quizattempt and question
-    questions = db.relationship('Question', cascade='all,delete', backref='quiz', lazy=True)
+    
+    # CHANGED: Updated to delete-orphan for cleaner cascade handling
+    questions = db.relationship('Question', cascade='all,delete-orphan', backref='quiz', lazy=True)
+    
+    # ADDED: Relationship to quiz attempts for proper cascading
+    quiz_attempts = db.relationship('QuizAttempt', cascade='all,delete-orphan', backref='quiz', lazy=True)
 
     def to_dict(self):
         return {
             "id": self.id,
             "title": self.title,
             "description": self.description,
-            "schedule_date": self.schedule_date.strftime("%Y-%m-%d %H:%M:%S") if self.schedule_date else None,
+            "start_date": self.schedule_date.strftime("%Y-%m-%d %H:%M:%S") if self.schedule_date else None,
+            "end_date": self.end_date.strftime("%Y-%m-%d %H:%M:%S") if self.end_date else None,
             "duration": self.duration,
             "chapter_id": self.chapter_id,
             "total_marks": self.total_marks,
             "pass_marks": self.pass_marks,
             "created_at": self.created_at.strftime("%Y-%m-%d %H:%M:%S") if self.created_at else None,
             "is_active": self.is_active,
-            "questions" : [q.to_dict() for q in self.questions],
+            "questions": [q.to_dict() for q in self.questions],
             "questions_count": len(self.questions) if self.questions else 0
         }
-
 
 class Question(db.Model):
     __tablename__ = "question"
@@ -118,8 +124,8 @@ class Question(db.Model):
     marks = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now())
 
-    # relationship with questionresponse and question
-    responses = db.relationship('QuestionResponse', cascade='all,delete', backref='question', lazy=True)
+    # CHANGED: Updated to delete-orphan for cleaner cascade handling
+    responses = db.relationship('QuestionResponse', cascade='all,delete-orphan', backref='question', lazy=True)
 
     def to_dict(self):
         return {
@@ -135,33 +141,36 @@ class Question(db.Model):
             "created_at": self.created_at.strftime("%Y-%m-%d %H:%M:%S") if self.created_at else None
         }
 
-
 class QuizAttempt(db.Model):
     __tablename__ = "quizattempt"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     quiz_id = db.Column(db.Integer, db.ForeignKey("quiz.id"), nullable=False)
-    strat_time = db.Column(db.DateTime, default=datetime.now())
+    start_time = db.Column(db.DateTime, default=datetime.now())
     end_time = db.Column(db.DateTime, default=datetime.now())
     is_completed = db.Column(db.Boolean, default=True)
     score = db.Column(db.Integer, default=0)
 
-    user = db.relationship('User', cascade='all,delete', backref='quizattempt', lazy=True)
-    quiz = db.relationship('Quiz', cascade='all,delete', backref='quizattempt', lazy=True)
-    responses = db.relationship('QuestionResponse', cascade='all,delete', backref='quizattempt', lazy=True)
+    # CRITICAL CHANGE: Removed the problematic circular cascade relationships
+    # These were causing the integrity errors when deleting subjects/quizzes
+    # The relationships are now handled by backref in User and Quiz models above
+    # user = db.relationship('User', cascade='all,delete', backref='quizattempt', lazy=True)  # REMOVED
+    # quiz = db.relationship('Quiz', cascade='all,delete', backref='quizattempt', lazy=True)  # REMOVED
+    
+    # CHANGED: Updated to delete-orphan and changed backref name for consistency
+    responses = db.relationship('QuestionResponse', cascade='all,delete-orphan', backref='quiz_attempt', lazy=True)
 
     def to_dict(self):
         return {
             "id": self.id,
             "user_id": self.user_id,
             "quiz_id": self.quiz_id,
-            "strat_time": self.strat_time.strftime("%Y-%m-%d %H:%M:%S") if self.strat_time else None,
+            "start_time": self.start_time.strftime("%Y-%m-%d %H:%M:%S") if self.start_time else None,
             "end_time": self.end_time.strftime("%Y-%m-%d %H:%M:%S") if self.end_time else None,
             "is_completed": self.is_completed,
             "score": self.score,
             "responses_count": len(self.responses) if self.responses else 0
         }
-
 
 class QuestionResponse(db.Model):
     __tablename__ = "questionresponse"

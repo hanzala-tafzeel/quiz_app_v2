@@ -1,7 +1,44 @@
 
 <template>
     
-    <NavPage/>
+    <div class="page-wrapper d-flex flex-column min-vh-100">
+
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+      <div class="container">
+        <router-link class="navbar-brand fw-bold" to="/">QuizMaster</router-link>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-md mx-auto gap-2">
+            <li class="nav-item rounded">
+              <router-link class="nav-link active" aria-current="page" to="/">
+                <i class="bi bi-house-fill me-2"></i>Home
+              </router-link>
+            </li>
+            <li class="nav-item rounded">
+              <router-link class="nav-link" to="/login">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Login
+              </router-link>
+            </li>
+            <li class="nav-item rounded">
+              <router-link class="nav-link" to="/register">
+                <i class="bi bi-clipboard2-check-fill me-2"></i>Signup
+              </router-link>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
 
     <div class="container py-5">
         <div class="row justify-content-center align-items-center p-0">
@@ -95,6 +132,8 @@
     </div>
 
     <FootPage/>
+
+    </div>
 
 </template>
 

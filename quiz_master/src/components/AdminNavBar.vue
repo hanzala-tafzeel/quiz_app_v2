@@ -1,6 +1,17 @@
 <script>
 export default {
   name: 'AdminNavBar',
+  methods: {
+    logout() {
+            this.$store.dispatch('logout')
+
+            // Redirect to login page
+            this.$router.push('/login')
+
+            // Optional: Show success message
+            console.log('Logged out successfully')
+        }
+  }
 
 };
 </script>
@@ -43,7 +54,7 @@ export default {
             <li>
                 <hr class="dropdown-divider">
             </li>
-            <li><a class="dropdown-item" href="/logout">Logout</a></li>
+            <li><a class="dropdown-item" @click="logout">Logout</a></li>
         </ul>
     </li>
 </ul>

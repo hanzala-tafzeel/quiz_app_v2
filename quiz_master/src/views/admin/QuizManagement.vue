@@ -263,7 +263,7 @@
           <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title">Confirm Delete</h5>
-              <button type="button" class="btn-close" @click="closeModal('deleteQuiz')"></button>
+              <button type="button" class="btn-close btn-close-white" @click="closeModal('deleteQuiz')"></button>
             </div>
             <div class="modal-body">
               <p>Are you sure you want to delete the quiz "{{ selectedQuiz?.title }}"? This will also delete all

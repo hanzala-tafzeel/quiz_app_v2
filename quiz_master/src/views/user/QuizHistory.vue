@@ -72,16 +72,10 @@
       </div>
     </div>
 
-    <!-- Loading State -->
-    <div v-if="loading" class="text-center py-5">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-      <p class="mt-3 text-muted">Loading your quiz history...</p>
-    </div>
+
 
     <!-- Empty State -->
-    <div v-else-if="attempts.length === 0" class="text-center py-5">
+    <div v-if="attempts.length === 0" class="text-center py-5">
       <div class="mb-4">
         <i class="bi bi-inbox" style="font-size: 4rem; color: #dee2e6;"></i>
       </div>
@@ -266,6 +260,7 @@ export default {
     completedAttempts() {
       return this.attempts.filter(attempt => attempt.is_completed).length;
     },
+
     averageScore() {
       if (this.completedAttempts === 0) return 0;
       const totalPercentage = this.attempts
@@ -279,14 +274,17 @@ export default {
         .filter(attempt => attempt.is_completed)
         .map(attempt => attempt.percentage));
     },
+    /* --------------------- Pagination Computed Properties --------------------- */
     totalPages() {
       return Math.ceil(this.attempts.length / this.itemsPerPage);
     },
+
     paginatedAttempts() {
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
       return this.attempts.slice(start, end);
     },
+    /* --------------------- Pagination Helper Methods --------------------- */
     visiblePages() {
       const pages = [];
       const start = Math.max(1, this.currentPage - 2);

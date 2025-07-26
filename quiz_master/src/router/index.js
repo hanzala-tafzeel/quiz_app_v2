@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import store from '../store'
+
 import HomeView from '../views/HomeView.vue'
 import LoginPage from '../views/LoginPage.vue'
 import RegisterPage from '../views/RegisterPage.vue'
@@ -34,64 +36,110 @@ const routes = [
     name: 'register',
     component: RegisterPage
   },
+
+  /* ------------------------------ User routes ------------------------------ */
   {
     path: '/user',
     name: 'user',
-    component: UserPage
+    component: UserPage,
+    meta: {
+      requiresAuth: true,
+      roles: ['user']
+    }
   },
   {
     path: '/user/quizzes',
     name: 'BrowseContent',
     component: BrowseQuiz,
+    meta: {
+      requiresAuth: true,
+      roles: ['user']
+    }
   },
   {
     path: '/user/profile',
     name: 'userProfile',
-    component: UserProfile
+    component: UserProfile,
+    meta: {
+      requiresAuth: true,
+      roles: ['user']
+    }
   },
   {
     path: '/user/summary',
     name: 'userSummary',
-    component: UserSummary
+    component: UserSummary,
+    meta: {
+      requiresAuth: true,
+      roles: ['user']
+    }
   },
   {
     path: '/user/quiz/:quizId',
     name: 'quizPage',
     component: QuizPage,
+    meta: {
+      requiresAuth: true,
+      roles: ['user']
+    },
     props: true
   },
   {
     path: '/user/quiz/:attemptId/score',
     name: 'quizScore',
     component: ScorePage,
+    meta: {
+      requiresAuth: true,
+      roles: ['user']
+    },
     props: true
   },
   {
     path: '/user/profile/history',
     name: 'userHistory',
     component: QuizHistory,
+    meta: {
+      requiresAuth: true,
+      roles: ['user']
+    }
   },
 
-  // Admin routes
+  /* ------------------------------ Admin routes ------------------------------ */
   {
     path: '/admin',
     name: 'admin',
     component: AdminPage,
+    meta: {
+      requiresAuth: true,
+      roles: ['admin']
+    }
   },
   {
     path: '/quizmanagement',
     name: 'quizmanagement',
-    component: QuizManagement
+    component: QuizManagement,
+    meta: {
+      requiresAuth: true,
+      roles: ['admin']
+    } 
   },
   {
     path: '/summary',
     name: 'adminsummary',
-    component: AdminSummary
+    component: AdminSummary,
+    meta: {
+      requiresAuth: true,
+      roles: ['admin']
+    }
   },
   {
     path: '/adminuserpage',
     name: 'AdminUserPage',
-    component: ProfilePage
+    component: ProfilePage,
+    meta: {
+      requiresAuth: true,
+      roles: ['admin']
+    }
   }
 
 
@@ -101,5 +149,47 @@ const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes
 })
+
+
+// Router Guards using Vuex
+router.beforeEach((to, from, next) => {
+  // Load auth from storage if not already loaded
+  // if (!store.state.isAuthenticated) {
+  //   store.dispatch('loadAuthFromStorage')
+  // }
+
+
+  const isAuthenticated = store.state.isAuthenticated
+  const userRole = store.getters.getUserRole
+
+  // Check if route requires guest (not logged in)
+  if (to.meta.requiresGuest && isAuthenticated) {
+    if (userRole === 'admin') {
+      return next('/admin')
+    } else {
+      return next('/user')
+    }
+  }
+
+    // Check if route requires authentication
+    if (to.meta.requiresAuth && !isAuthenticated) {
+      return next('/login')
+    }
+
+  
+  // Check role-based access
+  if (to.meta.roles && !to.meta.roles.includes(userRole)) {
+    if (userRole === 'admin') {
+      return next('/admin')
+    } else if (userRole === 'user' || userRole === 'student') {
+      return next('/user')
+    } else {
+      return next('/login')
+    }
+  }
+
+  next()
+})
+
 
 export default router
