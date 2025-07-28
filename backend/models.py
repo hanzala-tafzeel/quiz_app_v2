@@ -15,7 +15,7 @@ class User(db.Model, UserMixin):
     created_at = db.Column(db.DateTime, default=datetime.now())
     is_active = db.Column(db.Boolean, default=True)
 
-    # ADDED: Relationship to quiz attempts for proper cascading
+    # relationship to quiz attempts for proper cascading
     quiz_attempts = db.relationship('QuizAttempt', cascade='all,delete-orphan', backref='user', lazy=True)
 
     def to_dict(self):
@@ -37,7 +37,7 @@ class Subject(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now())
     is_active = db.Column(db.Boolean, default=True)
     
-    # CHANGED: Updated to delete-orphan for cleaner cascade handling
+    # relationship with chpaters 
     chapters = db.relationship('Chapter', cascade='all,delete-orphan', backref='subject', lazy=True)
 
     def to_dict(self):
@@ -60,7 +60,7 @@ class Chapter(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now())
     is_active = db.Column(db.Boolean, default=True)
     
-    # CHANGED: Updated to delete-orphan for cleaner cascade handling
+    # relationshipt with quiz table
     quizzes = db.relationship('Quiz', cascade='all,delete-orphan', backref='chapter', lazy=True)
 
     def to_dict(self):
@@ -88,10 +88,8 @@ class Quiz(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now())
     is_active = db.Column(db.Boolean, default=True)
     
-    # CHANGED: Updated to delete-orphan for cleaner cascade handling
+    # relationships with question and quiz_attempts 
     questions = db.relationship('Question', cascade='all,delete-orphan', backref='quiz', lazy=True)
-    
-    # ADDED: Relationship to quiz attempts for proper cascading
     quiz_attempts = db.relationship('QuizAttempt', cascade='all,delete-orphan', backref='quiz', lazy=True)
 
     def to_dict(self):
@@ -124,7 +122,7 @@ class Question(db.Model):
     marks = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now())
 
-    # CHANGED: Updated to delete-orphan for cleaner cascade handling
+    #relationship with question_response
     responses = db.relationship('QuestionResponse', cascade='all,delete-orphan', backref='question', lazy=True)
 
     def to_dict(self):
@@ -151,13 +149,8 @@ class QuizAttempt(db.Model):
     is_completed = db.Column(db.Boolean, default=True)
     score = db.Column(db.Integer, default=0)
 
-    # CRITICAL CHANGE: Removed the problematic circular cascade relationships
-    # These were causing the integrity errors when deleting subjects/quizzes
-    # The relationships are now handled by backref in User and Quiz models above
-    # user = db.relationship('User', cascade='all,delete', backref='quizattempt', lazy=True)  # REMOVED
-    # quiz = db.relationship('Quiz', cascade='all,delete', backref='quizattempt', lazy=True)  # REMOVED
     
-    # CHANGED: Updated to delete-orphan and changed backref name for consistency
+    # relationship with question response table
     responses = db.relationship('QuestionResponse', cascade='all,delete-orphan', backref='quiz_attempt', lazy=True)
 
     def to_dict(self):

@@ -8,11 +8,6 @@ import flask_excel as excel
 import os
 
 
-@shared_task(ignore_result=False)
-def add(x, y):
-    time.sleep(50)
-    """Add two numbers."""
-    return x + y
 
 @shared_task(ignore_result=False)
 def export_user_quiz_history(user_id):

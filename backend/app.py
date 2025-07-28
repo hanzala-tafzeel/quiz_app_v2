@@ -1,4 +1,3 @@
-# app.py - Refactored Flask Application
 from flask import Flask
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash
@@ -32,12 +31,12 @@ def create_app():
     quiz_app.config["CACHE_REDIS_PORT"] = 6379
     quiz_app.config["CACHE_DEFAULT_TIMEOUT"] = 30
 
+    #flask mail configuration
     quiz_app.config["MAIL_SERVER"] = "smtp.gmail.com"
     quiz_app.config["MAIL_PORT"] = 587
     quiz_app.config["MAIL_USE_TLS"] = True
-    # quiz_app.config["MAIL_USE_SSL"] = False
     quiz_app.config["MAIL_USERNAME"] = "hanzalatafzeel44@gmail.com"
-    quiz_app.config["MAIL_PASSWORD"] = "qlfrhjwdoxqpytei"  # Use app password for security
+    quiz_app.config["MAIL_PASSWORD"] = "qlfrhjwdoxqpytei"  
     quiz_app.config["MAIL_DEFAULT_SENDER"] = "hanzalatafzeel44@gmail.com"
 
 
@@ -50,7 +49,7 @@ def create_app():
     cache = Cache(quiz_app)
     jwt.init_app(quiz_app)
 
-        # Initialize Flask-Mail - ADD THIS LINE
+    # Initialize Flask-Mail
     mail = Mail(quiz_app)
     quiz_app.mail = mail  # Make mail accessible through app instance
 
@@ -70,7 +69,6 @@ def create_app():
     
     # Create application context
     with quiz_app.app_context():
-        # db.create_all()
         
         # Ensure admin user exists
 
@@ -86,7 +84,7 @@ def create_app():
                 db.session.commit()
                 print("Admin user created with email 'admin@gmail.com' and password 'admin123'.")
         except Exception as e:
-            # ADDED: Handle case when tables don't exist yet
+            # Handle case when tables don't exist yet
             print(f"Note: Could not create admin user. Run migrations first. Error: {e}")
     
     print("Quiz App Initialized")

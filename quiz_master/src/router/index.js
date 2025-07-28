@@ -18,6 +18,7 @@ import AdminPage from '../views/admin/AdminPage.vue'
 import AdminSummary from '../views/admin/AdminSummary.vue'
 import QuizManagement from '../views/admin/QuizManagement.vue'
 import ProfilePage from '../views/admin/ProfilePage.vue'
+import AdminSearch from '../views/admin/AdminSearch.vue'
 
 
 const routes = [
@@ -122,6 +123,12 @@ const routes = [
       requiresAuth: true,
       roles: ['admin']
     } 
+  },
+  {
+    path : '/adminsearch',
+    name : 'AdminSearch',
+    component : AdminSearch
+
   },
   {
     path: '/summary',

@@ -1,10 +1,9 @@
-# routes.py - Standard Flask Routes (converted from Flask-RESTful)
 from flask import request, jsonify, abort , send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token, verify_jwt_in_request
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, date
 from functools import wraps
-from Celery.tasks import export_user_quiz_history, add
+from Celery.task import export_user_quiz_history
 from celery.result import AsyncResult
 from flask_mail import Message
 
@@ -70,13 +69,6 @@ def register_routes(app):
                 return send_file(f'./user-downloads/{result.result}')
         else:
             return jsonify({"status": "pending"}), 202
-
-
-    @app.get('/cache')
-    @cache.cached(timeout=5)
-    def cache_test():
-        """Test route to check if caching is working"""
-        return jsonify({"message": str(datetime.now())})
 
 
 
@@ -291,11 +283,6 @@ def register_routes(app):
                 print("Processing end_datetime")
                 end_datetime = datetime.fromisoformat(data.get('end_datetime'))
             
-            # FALLBACK: Handle legacy 'date' field if datetime fields are empty
-            if not start_datetime and data.get('date') and data.get('date').strip():
-                print('Processing legacy date field')
-                schedule_date = datetime.strptime(data.get('date'), "%Y-%m-%d").date()
-                start_datetime = datetime.combine(schedule_date, datetime.min.time())
                 
         except (ValueError, TypeError) as e:
             return jsonify({
@@ -379,9 +366,8 @@ def register_routes(app):
                     "error": f"Invalid date/time format: {str(e)}"
                 }), 400
             
-            # Remove the future time constraint (as requested in previous conversation)
-            # if start_datetime and start_datetime <= datetime.now():
-            #     return jsonify({"error": "Start time must be in the future"}), 400
+            if start_datetime and start_datetime <= datetime.now():
+                return jsonify({"error": "Start time must be in the future"}), 400
             
             # Only validate end_datetime if both start and end are provided
             if start_datetime and end_datetime and end_datetime <= start_datetime:
