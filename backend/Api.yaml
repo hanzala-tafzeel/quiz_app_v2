@@ -1,0 +1,1353 @@
+openapi: 3.0.3
+info:
+  title: Quiz Management API
+  description: A comprehensive quiz management system with user authentication, admin panel, and detailed analytics
+  version: 1.0.0
+  contact:
+    email: bytescode0115@gmail.com
+
+servers:
+  - url: http://localhost:5000/api
+    description: Development server
+
+tags:
+  - name: Authentication
+    description: User authentication endpoints
+  - name: Users
+    description: User management operations
+  - name: Subjects
+    description: Subject management operations
+  - name: Chapters
+    description: Chapter management operations
+  - name: Quizzes
+    description: Quiz management operations
+  - name: Questions
+    description: Question management operations
+  - name: Quiz Attempts
+    description: Quiz attempt and submission operations
+  - name: Analytics
+    description: User and admin analytics
+  - name: Utilities
+    description: Utility endpoints for exports and notifications
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        role:
+          type: string
+          enum: [user, admin]
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    Subject:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Chapter:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        subject_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    Quiz:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        duration:
+          type: integer
+          description: Duration in minutes
+        total_marks:
+          type: integer
+        pass_marks:
+          type: number
+          format: float
+        schedule_date:
+          type: string
+          format: date-time
+        end_date:
+          type: string
+          format: date-time
+        chapter_id:
+          type: integer
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    Question:
+      type: object
+      properties:
+        id:
+          type: integer
+        question_text:
+          type: string
+        option1:
+          type: string
+        option2:
+          type: string
+        option3:
+          type: string
+        option4:
+          type: string
+        correct_opt:
+          type: integer
+          minimum: 1
+          maximum: 4
+        marks:
+          type: integer
+        quiz_id:
+          type: integer
+
+    QuizAttempt:
+      type: object
+      properties:
+        id:
+          type: integer
+        quiz_id:
+          type: integer
+        user_id:
+          type: integer
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        score:
+          type: integer
+        is_completed:
+          type: boolean
+        total_marks:
+          type: integer
+        quiz_title:
+          type: string
+        percentage:
+          type: number
+          format: float
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+    Success:
+      type: object
+      properties:
+        message:
+          type: string
+
+paths:
+  # Authentication Endpoints
+  /login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+                  role:
+                    type: string
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: User inactive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /register:
+    post:
+      tags:
+        - Authentication
+      summary: User registration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fullname
+                - email
+                - password
+                - mobile
+              properties:
+                fullname:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                mobile:
+                  type: string
+      responses:
+        '200':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user_id:
+                    type: integer
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # User Management
+  /user:
+    get:
+      tags:
+        - Users
+      summary: Get current user profile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    put:
+      tags:
+        - Users
+      summary: Update current user profile
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                phone:
+                  type: string
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+
+  /users:
+    get:
+      tags:
+        - Users
+      summary: List all users (Admin only)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+        '403':
+          description: Admin access required
+
+  /users/{user_id}:
+    get:
+      tags:
+        - Users
+      summary: Get user details (Admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+    put:
+      tags:
+        - Users
+      summary: Update user (Admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                phone:
+                  type: string
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: User updated successfully
+    delete:
+      tags:
+        - Users
+      summary: Delete user (Admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User deleted successfully
+
+  /users/search:
+    post:
+      tags:
+        - Users
+      summary: Search users (Admin only)
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                search:
+                  type: string
+                search_by:
+                  type: string
+                  enum: [username, email, phone]
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+
+  # Subject Management
+  /subjects/:
+    get:
+      tags:
+        - Subjects
+      summary: Get all subjects
+      responses:
+        '200':
+          description: List of subjects
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subjects:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Subject'
+
+  /subjects:
+    post:
+      tags:
+        - Subjects
+      summary: Create new subject (Admin only)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Subject created successfully
+        '409':
+          description: Subject already exists
+
+  /subjects/{subject_id}:
+    get:
+      tags:
+        - Subjects
+      summary: Get subject details
+      parameters:
+        - name: subject_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Subject details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subject'
+    put:
+      tags:
+        - Subjects
+      summary: Update subject (Admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: subject_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subject:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Subject updated successfully
+    delete:
+      tags:
+        - Subjects
+      summary: Delete subject (Admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: subject_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Subject deleted successfully
+
+  /subjects/search:
+    post:
+      tags:
+        - Subjects
+      summary: Search subjects
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                search:
+                  type: string
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subjects:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Subject'
+
+  # Chapter Management
+  /subjects/{subject_id}/chapters:
+    get:
+      tags:
+        - Chapters
+      summary: Get chapters for a subject
+      parameters:
+        - name: subject_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of chapters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chapters:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Chapter'
+    post:
+      tags:
+        - Chapters
+      summary: Create new chapter (Admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: subject_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Chapter created successfully
+        '409':
+          description: Chapter already exists
+
+  /chapters:
+    get:
+      tags:
+        - Chapters
+      summary: Get all chapters
+      responses:
+        '200':
+          description: List of all chapters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chapters:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Chapter'
+
+  /chapters/{chapter_id}:
+    get:
+      tags:
+        - Chapters
+      summary: Get chapter details
+      parameters:
+        - name: chapter_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Chapter details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Chapter'
+    put:
+      tags:
+        - Chapters
+      summary: Update chapter (Admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: chapter_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chapter:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Chapter updated successfully
+    delete:
+      tags:
+        - Chapters
+      summary: Delete chapter (Admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: chapter_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Chapter deleted successfully
+
+  # Quiz Management
+  /quizzes:
+    get:
+      tags:
+        - Quizzes
+      summary: Get all quizzes
+      responses:
+        '200':
+          description: List of quizzes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  quizzes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Quiz'
+    post:
+      tags:
+        - Quizzes
+      summary: Create new quiz (Admin only)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - description
+                - duration
+                - chapter_id
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                duration:
+                  type: integer
+                  minimum: 1
+                start_datetime:
+                  type: string
+                  format: date-time
+                end_datetime:
+                  type: string
+                  format: date-time
+                chapter_id:
+                  type: integer
+      responses:
+        '200':
+          description: Quiz created successfully
+        '400':
+          description: Validation error
+
+  /quizzes/{quiz_id}:
+    get:
+      tags:
+        - Quizzes
+      summary: Get quiz details
+      parameters:
+        - name: quiz_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Quiz details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quiz'
+    put:
+      tags:
+        - Quizzes
+      summary: Update quiz (Admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: quiz_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                duration:
+                  type: integer
+                start_datetime:
+                  type: string
+                  format: date-time
+                end_datetime:
+                  type: string
+                  format: date-time
+                chapter_id:
+                  type: integer
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: Quiz updated successfully
+        '400':
+          description: Validation error
+    delete:
+      tags:
+        - Quizzes
+      summary: Delete quiz (Admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: quiz_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Quiz deleted successfully
+
+  /quizzes/search:
+    post:
+      tags:
+        - Quizzes
+      summary: Search quizzes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                search:
+                  type: string
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  quizzes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Quiz'
+
+  /quizzes/active:
+    get:
+      tags:
+        - Quizzes
+      summary: Get active quizzes
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of active quizzes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  quizzes:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: '#/components/schemas/Quiz'
+                        - type: object
+                          properties:
+                            is_available:
+                              type: boolean
+
+  # Question Management
+  /quizzes/{quiz_id}/questions:
+    get:
+      tags:
+        - Questions
+      summary: Get questions for a quiz
+      parameters:
+        - name: quiz_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of questions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  questions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Question'
+    post:
+      tags:
+        - Questions
+      summary: Add question to quiz (Admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: quiz_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - question_text
+                - option1
+                - option2
+                - option3
+                - option4
+                - correct_opt
+                - marks
+              properties:
+                question_text:
+                  type: string
+                option1:
+                  type: string
+                option2:
+                  type: string
+                option3:
+                  type: string
+                option4:
+                  type: string
+                correct_opt:
+                  type: integer
+                  minimum: 1
+                  maximum: 4
+                marks:
+                  type: integer
+      responses:
+        '200':
+          description: Question added successfully
+
+  /questions/{question_id}:
+    get:
+      tags:
+        - Questions
+      summary: Get question details
+      parameters:
+        - name: question_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Question details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Question'
+    put:
+      tags:
+        - Questions
+      summary: Update question (Admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: question_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                question:
+                  type: string
+                option1:
+                  type: string
+                option2:
+                  type: string
+                option3:
+                  type: string
+                option4:
+                  type: string
+                correctOption:
+                  type: integer
+                marks:
+                  type: integer
+      responses:
+        '200':
+          description: Question updated successfully
+    delete:
+      tags:
+        - Questions
+      summary: Delete question (Admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: question_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Question deleted successfully
+
+  # Quiz Attempts
+  /attempts:
+    get:
+      tags:
+        - Quiz Attempts
+      summary: Get user's quiz attempts
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of attempts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  attempts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/QuizAttempt'
+
+  /quizzes/{quiz_id}/attempt:
+    get:
+      tags:
+        - Quiz Attempts
+      summary: Get quiz for attempt
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: quiz_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Quiz data for attempt
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    type: string
+                  duration:
+                    type: integer
+                    description: Duration in seconds
+                  total_marks:
+                    type: integer
+                  questions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        text:
+                          type: string
+                        options:
+                          type: array
+                          items:
+                            type: string
+                        marks:
+                          type: integer
+    post:
+      tags:
+        - Quiz Attempts
+      summary: Submit quiz attempt
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: quiz_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                responses:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      question_id:
+                        type: integer
+                      selected_option:
+                        type: integer
+      responses:
+        '200':
+          description: Quiz submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  attempt_id:
+                    type: integer
+                  score:
+                    type: integer
+                  total_marks:
+                    type: integer
+                  percentage:
+                    type: number
+                  passed:
+                    type: boolean
+                  responses:
+                    type: array
+                    items:
+                      type: object
+
+  /attempts/{attempt_id}:
+    get:
+      tags:
+        - Quiz Attempts
+      summary: Get attempt details
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: attempt_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Attempt details with answers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    type: string
+                  total_marks:
+                    type: integer
+                  score:
+                    type: integer
+                  percentage:
+                    type: number
+                  passed:
+                    type: boolean
+                  start_time:
+                    type: string
+                    format: date-time
+                  end_time:
+                    type: string
+                    format: date-time
+                  questions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        text:
+                          type: string
+                        options:
+                          type: array
+                          items:
+                            type: string
+                        correct_option:
+                          type: integer
+                        marks:
+                          type: integer
+                        selected_option:
+                          type: integer
+                        is_correct:
+                          type: boolean
+
+  # Analytics
+  /summary:
+    get:
+      tags:
+        - Analytics
+      summary: Get user performance summary
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User performance analytics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary:
+                    type: object
+                    properties:
+                      quizzes_taken:
+                        type: integer
+                      avg_score:
+                        type: number
+                      upcoming_quizzes:
+                        type: integer
+                      pass_rate:
+                        type: number
+                  recent_attempts:
+                    type: array
+                    items:
+                      type: object
+                  subject_performance:
+                    type: array
+                    items:
+                      type: object
+
+  /admin/summary:
+    get:
+      tags:
+        - Analytics
+      summary: Get admin dashboard summary
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Admin analytics dashboard
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stats:
+                    type: object
+                    properties:
+                      total_users:
+                        type: integer
+                      total_quizzes:
+                        type: integer
+                      active_quizzes:
+                        type: integer
+                      total_subjects:
+                        type: integer
+                      total_attempts:
+                        type: integer
+                  attempts_today:
+                    type: array
+                    items:
+                      type: object
+                  subject_performance:
+                    type: array
+                    items:
+                      type: object
+                  attempt_distribution:
+                    type: array
+                    items:
+                      type: object
+                  top_performers:
+                    type: array
+                    items:
+                      type: object
+
+  # Utility Endpoints
+  /send-notification:
+    post:
+      tags:
+        - Utilities
+      summary: Send email notification
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Email sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+
+  /generate_csv:
+    get:
+      tags:
+        - Utilities
+      summary: Generate CSV export task
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: CSV generation task started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  task_id:
+                    type: string
+        '500':
+          description: Failed to start task
+
+  /get_csv_data/{id}:
+    get:
+      tags:
+        - Utilities
+      summary: Download CSV export
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Task ID from generate_csv endpoint
+      responses:
+        '200':
+          description: CSV file download
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        '202':
+          description: Task still pending
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: pending
+        '404':
+          description: No quiz attempts found
+        '500':
+          description: Export failed

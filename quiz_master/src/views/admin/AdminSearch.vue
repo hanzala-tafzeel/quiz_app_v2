@@ -1,5 +1,5 @@
 <template>
-    <div class="search-page">
+       <div class="page-wrapper d-flex flex-column min-vh-100">
       <!-- Navbar -->
        <AdminNavBar/>
 

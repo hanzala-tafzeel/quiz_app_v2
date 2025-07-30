@@ -7,15 +7,15 @@ class CeleryConfig:
     result_backend = 'redis://localhost:6379/1'
     timezone = 'Asia/Kolkata'
 
-        # Add beat schedule for periodic tasks
+        # Added beat schedule for periodic tasks
     beat_schedule = {
         'daily-reminder': {
-            'task': 'Celery.tasks.send_daily_reminder',  # Adjust path based on your structure
+            'task': 'Celery.tasks.send_daily_reminder',  
             'schedule': crontab(hour=15, minute=58),  # Every day at 9:00 AM
         },
         'monthly-report': {
-            'task': 'Celery.tasks.generate_monthly_report',  # Adjust path based on your structure
-            'schedule': crontab(day_of_month=26, hour=16, minute=3),  # 1st day of month at 10:00 AM
+            'task': 'Celery.tasks.generate_monthly_report',  
+            'schedule': crontab(day_of_month=26, hour=10, minute=0),  # 1st day of month at 10:00 AM
         },
     }
 

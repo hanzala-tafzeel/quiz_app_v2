@@ -597,8 +597,8 @@ def register_routes(app):
             } for q in quiz.questions]
         })
 
-    # ------------------------------ Summary Routes ----------------------------- #
-
+    
+    # -------------------------- User Summary Route -------------------------- #
     @app.route('/api/summary', methods=['GET'])
     @jwt_required()
     @cache.cached(timeout=20)
@@ -606,26 +606,69 @@ def register_routes(app):
         user_id = get_jwt_identity()
         attempts = QuizAttempt.query.filter_by(user_id=user_id).all()
         quizzes_taken = len(attempts)
-        normalized_scores = [a.score / Quiz.query.get(a.quiz_id).total_marks * 100 for a in attempts if Quiz.query.get(a.quiz_id).total_marks > 0]
-        avg_score = sum(normalized_scores) / quizzes_taken if quizzes_taken > 0 else 0
-        passed = [a for a in attempts if a.score >= Quiz.query.get(a.quiz_id).pass_marks]
+
+        # Calculated normalized score (in percentage) only if total_marks > 0
+        normalized_scores = []
+        for a in attempts:
+            quiz = Quiz.query.get(a.quiz_id)
+            if quiz and quiz.total_marks > 0:
+                normalized_scores.append(a.score / quiz.total_marks * 100)
+
+        avg_score = sum(normalized_scores) / len(normalized_scores) if normalized_scores else 0
+
+        # Count passed quizzes (score >= pass_marks and pass_marks > 0)
+        passed = []
+        for a in attempts:
+            quiz = Quiz.query.get(a.quiz_id)
+            if quiz and quiz.pass_marks is not None and a.score >= quiz.pass_marks:
+                passed.append(a)
+
         pass_rate = len(passed) / quizzes_taken * 100 if quizzes_taken > 0 else 0
-        upcoming_quizzes = Quiz.query.filter(Quiz.schedule_date > datetime.now(), Quiz.is_active == True).count()
-        recent_attempts = QuizAttempt.query.filter(QuizAttempt.user_id == user_id).order_by(QuizAttempt.start_time.desc()).limit(5).all()
-        recent_attempts_data = [{
-            'attempt_id': a.id,
-            'quiz_id': a.quiz_id,
-            'quiz_title': Quiz.query.get(a.quiz_id).title,
-            'date': a.start_time.strftime('%Y-%m-%d'),
-            'score': round(a.score / Quiz.query.get(a.quiz_id).total_marks * 100, 1)
-        } for a in recent_attempts]
+
+        # Count future quizzes
+        upcoming_quizzes = Quiz.query.filter(
+            Quiz.schedule_date > datetime.now(), Quiz.is_active == True
+        ).count()
+
+        # Last 5 quiz attempts
+        recent_attempts = QuizAttempt.query.filter_by(user_id=user_id).order_by(
+            QuizAttempt.start_time.desc()
+        ).limit(5).all()
+
+        # Data for recent attempts
+        recent_attempts_data = []
+        for a in recent_attempts:
+            quiz = Quiz.query.get(a.quiz_id)
+            if quiz and quiz.total_marks > 0:
+                recent_attempts_data.append({
+                    'attempt_id': a.id,
+                    'quiz_id': a.quiz_id,
+                    'quiz_title': quiz.title,
+                    'date': a.start_time.strftime('%Y-%m-%d'),
+                    'score': round(a.score / quiz.total_marks * 100, 1)
+                })
+
+        # Subject-wise performance
         subject_perf = {}
         for a in attempts:
             quiz = Quiz.query.get(a.quiz_id)
-            subject = Subject.query.get(Chapter.query.get(quiz.chapter_id).subject_id)
-            key = subject.name
-            subject_perf.setdefault(key, []).append(a.score / quiz.total_marks * 100)
-        subject_analytics = [{"subject": k, "avg_score": sum(v)/len(v), "attempts": len(v)} for k, v in subject_perf.items()]
+            if quiz and quiz.total_marks > 0:
+                chapter = Chapter.query.get(quiz.chapter_id)
+                if chapter:
+                    subject = Subject.query.get(chapter.subject_id)
+                    if subject:
+                        key = subject.name
+                        subject_perf.setdefault(key, []).append(a.score / quiz.total_marks * 100)
+
+        subject_analytics = []
+        for k, v in subject_perf.items():
+            if v:
+                subject_analytics.append({
+                    "subject": k,
+                    "avg_score": sum(v) / len(v),
+                    "attempts": len(v)
+                })
+
         return jsonify({
             "summary": {
                 "quizzes_taken": quizzes_taken,
@@ -636,9 +679,8 @@ def register_routes(app):
             "recent_attempts": recent_attempts_data,
             "subject_performance": subject_analytics
         })
-    
-    # ------------------------------ Admin Summary Routes ----------------------------- #
 
+    # -------------------------- Admin Summary Route -------------------------- #
     @app.route('/api/admin/summary', methods=['GET'])
     @jwt_required()
     @admin_required
@@ -649,41 +691,67 @@ def register_routes(app):
         total_subjects = Subject.query.count()
         total_quizzes = Quiz.query.count()
         total_attempts = QuizAttempt.query.count()
+
         today = date.today()
         attempts_today = [a for a in QuizAttempt.query.all() if a.start_time and a.start_time.date() == today]
+
         attempts_today_data = []
         for a in attempts_today:
             user = User.query.get(a.user_id)
             quiz = Quiz.query.get(a.quiz_id)
-            attempts_today_data.append({
-                'user': user.username if user else 'Unknown',
-                'quiz_title': quiz.title if quiz else 'Unknown',
-                'score': a.score,
-                'time': a.start_time.strftime('%H:%M'),
-                'completed': a.is_completed
-            })
+            if quiz and user:
+                attempts_today_data.append({
+                    'user': user.username,
+                    'quiz_title': quiz.title,
+                    'score': a.score,
+                    'time': a.start_time.strftime('%H:%M'),
+                    'completed': a.is_completed
+                })
+
+        # Subject performance calculations
         subject_perf = {}
         for sub in Subject.query.all():
             subject_perf[sub.name] = {'total_score': 0, 'attempt_count': 0}
+
         for a in QuizAttempt.query.all():
             quiz = Quiz.query.get(a.quiz_id)
-            chapter = Chapter.query.get(quiz.chapter_id)
-            subject = Subject.query.get(chapter.subject_id)
-            subject_perf[subject.name]['total_score'] += a.score
-            subject_perf[subject.name]['attempt_count'] += 1
-        subject_analytics = [{
-            "subject": s,
-            "avg_score": (d['total_score']/d['attempt_count']*10) if d['attempt_count']>0 else 0,
-            "attempts": d['attempt_count']
-        } for s, d in subject_perf.items()]
-        subject_attempt_distribution = [{"subject": s, "count": d['attempt_count']} for s, d in subject_perf.items()]
-        # Top performers
+            if quiz and quiz.total_marks > 0:
+                chapter = Chapter.query.get(quiz.chapter_id)
+                if chapter:
+                    subject = Subject.query.get(chapter.subject_id)
+                    if subject:
+                        subject_perf[subject.name]['total_score'] += (a.score / quiz.total_marks) * 100
+                        subject_perf[subject.name]['attempt_count'] += 1
+
+        subject_analytics = []
+        subject_attempt_distribution = []
+
+        for s, d in subject_perf.items():
+            if d['attempt_count'] > 0:
+                subject_analytics.append({
+                    "subject": s,
+                    "avg_score": round(d['total_score'] / d['attempt_count'], 1),
+                    "attempts": d['attempt_count']
+                })
+                subject_attempt_distribution.append({
+                    "subject": s,
+                    "count": d['attempt_count']
+                })
+
+        # Top 3 performers per quiz
         top_performers = []
         for q in Quiz.query.all():
-            attempts = QuizAttempt.query.filter_by(quiz_id=q.id).order_by(QuizAttempt.score.desc()).limit(3).all()
-            performers = [{"username": User.query.get(a.user_id).username, "score": a.score} for a in attempts if User.query.get(a.user_id)]
+            attempts = QuizAttempt.query.filter_by(quiz_id=q.id).order_by(
+                QuizAttempt.score.desc()
+            ).limit(3).all()
+            performers = []
+            for a in attempts:
+                user = User.query.get(a.user_id)
+                if user:
+                    performers.append({"username": user.username, "score": a.score})
             if performers:
                 top_performers.append({"quiz_title": q.title, "performers": performers})
+
         return jsonify({
             "stats": {
                 "total_users": total_users,

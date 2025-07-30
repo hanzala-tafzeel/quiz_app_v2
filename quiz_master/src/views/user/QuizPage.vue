@@ -295,6 +295,13 @@ export default {
         if (response.ok) {
           const data = await response.json();
           this.quizData = data;
+
+          
+          if(this.quizData.questions.length === 0) {
+            alert("This quiz has no questions.");
+            this.$router.push('/user');
+            return;
+          }
           this.timeRemaining = this.quizData.duration;
 
           const answersObj = {};
