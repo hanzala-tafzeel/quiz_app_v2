@@ -1,6 +1,5 @@
 <template>
        <div class="page-wrapper d-flex flex-column min-vh-100">
-      <!-- Navbar -->
        <AdminNavBar/>
         <!-- Added search page for admin -->
   
