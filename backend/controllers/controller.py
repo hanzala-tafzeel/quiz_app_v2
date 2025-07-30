@@ -29,7 +29,7 @@ def admin_required(func):
 
 def register_routes(app):
     """Register all routes with the Flask app"""
-    cache = app.cache  
+    cache = app.cache   # to enhace api using chache 
 
 
     # flask mail check 
