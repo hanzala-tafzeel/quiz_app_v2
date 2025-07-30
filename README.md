@@ -53,13 +53,13 @@ redis-server
 #### Start Celery Worker
 ```bash
 cd backend
-celery -A app.celery worker --loglevel=info
+celery -A app.celery_app worker -l INFO
 ```
 
 #### Start Celery Beat (for scheduled tasks)
 ```bash
 cd backend
-celery -A app.celery beat --loglevel=info
+celery -A app:celery_app beat -l INFO
 ```
 
 #### Run Backend Server
