@@ -2,7 +2,7 @@
        <div class="page-wrapper d-flex flex-column min-vh-100">
       <!-- Navbar -->
        <AdminNavBar/>
-
+        <!-- Added search page for admin -->
   
       <div class="container py-4">
         <!-- Search Header -->

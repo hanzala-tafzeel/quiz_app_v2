@@ -1,5 +1,7 @@
 <template>
  <div class="page-wrapper d-flex flex-column min-vh-100">
+
+  <!-- search for user -->
   <NavBar />
   <div class="container py-4">
 
