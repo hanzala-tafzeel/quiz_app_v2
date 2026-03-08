@@ -36,7 +36,7 @@ def create_app():
     quiz_app.config["MAIL_PORT"] = 587
     quiz_app.config["MAIL_USE_TLS"] = True
     quiz_app.config["MAIL_USERNAME"] = "hanzalatafzeel44@gmail.com"
-    quiz_app.config["MAIL_PASSWORD"] = "qlfrhjwdoxqpytei"  
+    quiz_app.config["MAIL_PASSWORD"] = "yourapppassword"  
     quiz_app.config["MAIL_DEFAULT_SENDER"] = "hanzalatafzeel44@gmail.com"
 
 
@@ -111,4 +111,5 @@ celery_app = celery_init_app(app)
 excel.init_excel(app)
 
 if __name__ == "__main__":
+
     app.run(debug=True)
